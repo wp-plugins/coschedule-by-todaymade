@@ -14,8 +14,25 @@ This plugin connects to CoSchedule, a team content marketing editorial calendar.
 
 This plugin connects to CoSchedule, the all-in-one content marketing editorial calendar for WordPress. It allows you to visually schedule blog posts with your team and automatically send messages to your social networks.
 
+Learn more at our website: [CoSchedule.com](http://coschedule.com)
+
+[youtube http://www.youtube.com/watch?v=ygq1zgkHZcs]
 
 == Installation ==
+
+You can install CoSchedule via the WordPress.org plugin directory or manually by uploading the files to your server.
+
+= WordPress Gallery =
+
+1. Sign in to your WordPress blog
+2. Go to 'Plugins' -> 'Add New'
+3. Search for 'coschedule'
+4. Find 'CoSchedule by Todaymade' in the results and click 'Install Now'
+5. Follow the on screen intructions
+
+= Manual =
+
+[youtube http://www.youtube.com/watch?v=xm9YCMTQZzM]
 
 1. Backup your WordPress database.
 2. Download the plugin zip file 'todaymade-coschedule.zip' to your computer.
