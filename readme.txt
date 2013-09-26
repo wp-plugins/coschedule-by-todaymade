@@ -50,11 +50,11 @@ Once you have the plugin installed, you can follow instructions found [here](htt
 
 == Screenshots ==
 
-1. Drag-and-Drop Editorial Calendar*: You can easily make changes to your blogging schedule, just by dragging and dropping posts. What you do on your calendar happens in WordPress.
-2. See What's Happening*: You can use your calendar to view and filter what's happening on your blog. It's easy to make a schedule with this customizable bird's-eye-view.
-3. The WordPress Plugin*: Install the plugin, and connect your blogs and accounts. The plugin lets you share your blog posts on social media, and puts them all on your calendar, too.
-4. Collaborate With Your Team*: You don’t have to chase after deadlines. Your team can clearly see what and when they should write. They’ll even get a few friendly reminders.
-5. Social Scheduling While You Blog*: Social messages are content, too. Write as many as you need at the same time you write your blog post. Hit publish, and automatically set them all in motion.
+1. **Drag-and-Drop Editorial Calendar**: You can easily make changes to your blogging schedule, just by dragging and dropping posts. What you do on your calendar happens in WordPress.
+2. **See What's Happening**: You can use your calendar to view and filter what's happening on your blog. It's easy to make a schedule with this customizable bird's-eye-view.
+3. **The WordPress Plugin**: Install the plugin, and connect your blogs and accounts. The plugin lets you share your blog posts on social media, and puts them all on your calendar, too.
+4. **Collaborate With Your Team**: You don’t have to chase after deadlines. Your team can clearly see what and when they should write. They’ll even get a few friendly reminders.
+5. **Social Scheduling While You Blog**: Social messages are content, too. Write as many as you need at the same time you write your blog post. Hit publish, and automatically set them all in motion.
 
 == Changelog ==
 
