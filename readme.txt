@@ -1,9 +1,9 @@
 === CoSchedule by Todaymade ===
-Contributors: @justin_walsh, @garrett_moon
+Contributors: todaymade
 Donate link: http://coschedule.com
-Tags: twitter, facebook, schedule, tweets, calendar
+Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.1
-Tested up to: 3.6
+Tested up to: 3.6.1
 Stable tag: 1.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -13,6 +13,8 @@ This plugin connects to CoSchedule, a team content marketing editorial calendar.
 == Description ==
 
 This plugin connects to CoSchedule, the all-in-one content marketing editorial calendar for WordPress. It allows you to visually schedule blog posts with your team and automatically send messages to your social networks.
+
+Auto publish and schedule your social media posts to facebook, twitter, linkedin, and tumblr.
 
 Learn more at our website: [CoSchedule.com](http://coschedule.com)
 
@@ -89,3 +91,8 @@ Once you have the plugin installed, you can follow instructions found [here](htt
 
 = 1.7 =
 * Initial public release
+
+== Upgrade Notice ==
+
+= 1.7 =
+Now longer in 'beta' staus. Upgade to this production ready version right away.
