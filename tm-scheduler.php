@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.7
+Version: 1.8
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	class tm_coschedule  {
 		private $api = "http://api.coschedule.com";
 		private $assets = "http://cdn.coschedule.com";
-		private $version = "1.7";
-		private $build = 9;
+		private $version = "1.8";
+		private $build = 10;
 		private $connected = false;
 		private $token = false;
 
@@ -402,7 +402,11 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $posts = array();
             foreach ($out as $post) {
                 $post = $this->get_full_post($post->ID);
-                $post['post_category'] = implode($post['post_category'], ',');
+                if (!is_null($post['post_category'])) {
+                    $post['post_category'] = implode($post['post_category'], ',');
+                } else {
+                    $post['post_category'] = "";
+                }
                 array_push($posts, $post);
             }
             return $posts;

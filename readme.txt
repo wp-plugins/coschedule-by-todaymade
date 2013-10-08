@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.1
 Tested up to: 3.6.1
-Stable tag: 1.7
+Stable tag: 1.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,22 +77,28 @@ Once you have the plugin installed, you can follow instructions found [here](htt
 
 == Changelog ==
 
-= 1.0 =
-* Release Candidate 3
-* Private beta release
+= 1.8 =
+* Fixes a rare issue when syncing categories
 
-= 1.1 =
-* Release Candidate 4
-* Public beta release
+= 1.7 =
+* Initial public release
 
 = 1.2 =
 * Release Candidate 5
 * Naming conflict bug fix
 
-= 1.7 =
-* Initial public release
+= 1.1 =
+* Release Candidate 4
+* Public beta release
+
+= 1.0 =
+* Release Candidate 3
+* Private beta release
 
 == Upgrade Notice ==
 
+= 1.8 =
+* This update fixes a rare issue when syncing categories
+
 = 1.7 =
-Now longer in 'beta' staus. Upgade to this production ready version right away.
+* No longer in 'beta' status. Upgrade to this production ready version right away
