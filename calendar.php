@@ -1,4 +1,8 @@
-<iframe id="CoSiFrame" frameborder=0 border=0 src="http://app.coschedule.com" width="100%"></iframe>
+<?php if (get_option('tm_coschedule_id')) {?>
+    <iframe id="CoSiFrame" frameborder=0 border=0 src="https://app.coschedule.com/#/blog/<?php echo get_option('tm_coschedule_id'); ?>/schedule" width="100%"></iframe>
+<?php } else { ?>
+    <iframe id="CoSiFrame" frameborder=0 border=0 src="https://app.coschedule.com" width="100%"></iframe>
+<?php } ?>
 <script>
 jQuery(document).ready(function($) {
     $('.update-nag').remove();

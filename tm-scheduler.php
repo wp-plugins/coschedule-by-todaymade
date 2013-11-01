@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.8
+Version: 1.8.1
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -20,10 +20,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	 * Main Class
 	 */
 	class tm_coschedule  {
-		private $api = "http://api.coschedule.com";
-		private $assets = "http://cdn.coschedule.com";
-		private $version = "1.8";
-		private $build = 10;
+		private $api = "https://api.coschedule.com";
+		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
+		private $version = "1.8.1";
+		private $build = 11;
 		private $connected = false;
 		private $token = false;
 
@@ -76,6 +76,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 */
 		public function deactivation() {
 			delete_option('tm_coschedule_token');
+			delete_option('tm_coschedule_id');
 		}
 
 		/**
@@ -83,9 +84,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 */
 		public function uninstall() {
 			delete_option('tm_coschedule_token');
-
-			// Notify the api
-			// $this->api_get('/wordpress_keys?_method=delete&_wordpress_key='. $this->token);
+			delete_option('tm_coschedule_id');
 		}
 
 		/**
@@ -101,14 +100,14 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			add_action( 'edit_category', array($this, "save_category_callback"));
 			add_action( 'delete_category', array($this, "delete_category_callback"));
 
-            // Called whenever a user/author is created/updated/deleted
+			// Called whenever a user/author is created/updated/deleted
 			add_action( 'user_register', array($this, "save_user_callback"));
 			add_action( 'profile_update', array($this, "save_user_callback"));
 			add_action( 'delete_user', array($this, "delete_user_callback"));
 
-            // Edit Flow Fix
-            add_filter('wp_insert_post_data', array($this, 'fix_custom_status_timestamp_before'), 1);
-            add_filter('wp_insert_post_data', array($this, 'fix_custom_status_timestamp_after'), 20);
+			// Edit Flow Fix
+			add_filter('wp_insert_post_data', array($this, 'fix_custom_status_timestamp_before'), 1);
+			add_filter('wp_insert_post_data', array($this, 'fix_custom_status_timestamp_after'), 20);
 		}
 
 		/**
@@ -119,17 +118,17 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			add_action('load-post.php', array($this, "meta_box_action"));
 			add_action('load-post-new.php', array($this, "meta_box_action"));
 
-            // Add meta box css and script to post edit screen
-            add_action('load-post.php', array($this, "meta_box_scripts"));
-            add_action('load-post-new.php', array($this, "meta_box_scripts"));
+			// Add meta box css and script to post edit screen
+			add_action('load-post.php', array($this, "meta_box_scripts"));
+			add_action('load-post-new.php', array($this, "meta_box_scripts"));
 
 			// Ajax: Get blog info
 			add_action('wp_ajax_tm_aj_get_bloginfo', array($this, 'tm_aj_get_bloginfo'));
-            add_action('wp_ajax_nopriv_tm_aj_get_bloginfo', array($this, 'tm_aj_get_bloginfo'));
+			add_action('wp_ajax_nopriv_tm_aj_get_bloginfo', array($this, 'tm_aj_get_bloginfo'));
 
 			// Ajax: Get full post with permalink
 			add_action('wp_ajax_tm_aj_get_full_post', array($this, 'tm_aj_get_full_post'));
-            add_action('wp_ajax_nopriv_tm_aj_get_full_post', array($this, 'tm_aj_get_full_post'));
+			add_action('wp_ajax_nopriv_tm_aj_get_full_post', array($this, 'tm_aj_get_full_post'));
 
 			// Ajax: Set token
 			add_action('wp_ajax_tm_aj_set_token', array($this, 'tm_aj_set_token'));
@@ -140,7 +139,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 
 			// Ajax: Deactivation
 			add_action('wp_ajax_tm_aj_deactivation', array($this, 'tm_aj_deactivation'));
-            add_action('wp_ajax_nopriv_tm_aj_deactivation', array($this, 'tm_aj_deactivation'));
+			add_action('wp_ajax_nopriv_tm_aj_deactivation', array($this, 'tm_aj_deactivation'));
 
 			// Add Sidebar Settings Link
 			add_action('admin_menu', array($this, 'add_menu'));
@@ -153,19 +152,19 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		* Add calendar and settings link to the admin menu
 		*/
 		public function add_menu() {
-            // Settings Page
+			// Settings Page
 			$settings_1 = add_options_page('CoSchedule Settings', 'CoSchedule', 'manage_options', 'tm_coschedule', array($this, 'plugin_settings_page'));
-            // Enqueue scripts for settings
-            add_action('admin_print_styles-' . $settings_1, array($this, 'plugin_settings_scripts'));
+			// Enqueue scripts for settings
+			add_action('admin_print_styles-' . $settings_1, array($this, 'plugin_settings_scripts'));
 
-            // Swith main nav link between settings and the calendar depending on if they are connected
-            if ($this->connected) {
-                add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_calendar_page'), $this->assets.'/plugin/icon.png', '50.505' );
-            } else {
-                $settings_2 = add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_settings_page'), $this->assets.'/plugin/icon.png', '50.505' );
-                // Enqueue scripts for settings
-                add_action('admin_print_styles-' . $settings_2, array($this, 'plugin_settings_scripts'));
-            }
+			// Swith main nav link between settings and the calendar depending on if they are connected
+			if ($this->connected) {
+				add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_calendar_page'), $this->assets.'/plugin/icon.png', '50.505' );
+			} else {
+				$settings_2 = add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_settings_page'), $this->assets.'/plugin/icon.png', '50.505' );
+				// Enqueue scripts for settings
+				add_action('admin_print_styles-' . $settings_2, array($this, 'plugin_settings_scripts'));
+			}
 		}
 
 		/**
@@ -188,26 +187,26 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			include(sprintf("%s/settings.php", dirname(__FILE__)));
 		}
 
-        /**
-        * Settings page scripts
-        */
-        public function plugin_settings_scripts() {
-            $cache_bust = $this->get_cache_bust();
+		/**
+		* Settings page scripts
+		*/
+		public function plugin_settings_scripts() {
+			$cache_bust = $this->get_cache_bust();
 
-            wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.min.css?cb='.$cache_bust);
-            wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
-            wp_enqueue_script('cos_js_plugin', $this->assets.'/js/settings.js?cb='.$cache_bust, false, null, true);
-        }
+			wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.min.css?cb='.$cache_bust);
+			wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
+			wp_enqueue_script('cos_js_plugin', $this->assets.'/js/settings.js?cb='.$cache_bust, false, null, true);
+		}
 
-        /**
-        * Calendar page menu callback
-        */
-        public function plugin_calendar_page() {
-            if(!current_user_can('edit_posts')) {
-                wp_die(__('You do not have sufficient permissions to access this page.'));
-            }
-            include(sprintf("%s/calendar.php", dirname(__FILE__)));
-        }
+		/**
+		* Calendar page menu callback
+		*/
+		public function plugin_calendar_page() {
+			if(!current_user_can('edit_posts')) {
+				wp_die(__('You do not have sufficient permissions to access this page.'));
+			}
+			include(sprintf("%s/calendar.php", dirname(__FILE__)));
+		}
 
 		/**
 		 * Registers the javascript variables for the page
@@ -229,16 +228,16 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			add_action('add_meta_boxes', array($this, "meta_box_setup"));
 		}
 
-        /**
-         * Enqueue the css and js for the metabox
-         */
-        public function meta_box_scripts() {
-            $cache_bust = $this->get_cache_bust();
+		/**
+		 * Enqueue the css and js for the metabox
+		 */
+		public function meta_box_scripts() {
+			$cache_bust = $this->get_cache_bust();
 
-            wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.css?cb='.$cache_bust);
-            wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
-            wp_enqueue_script('cos_js_plugin', $this->assets.'/js/plugin.js?cb='.$cache_bust, false, null, true);
-        }
+			wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.css?cb='.$cache_bust);
+			wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
+			wp_enqueue_script('cos_js_plugin', $this->assets.'/js/plugin.js?cb='.$cache_bust, false, null, true);
+		}
 
 		/**
 		 * Sets up the meta box to be inserted
@@ -307,9 +306,9 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 				"pingback_url"=>get_bloginfo("pingback_url"),
 				"rss2_url"=>get_bloginfo("rss2_url"),
 				"timezone_string"=>get_option("timezone_string"),
-                "gmt_offset"=>get_option("gmt_offset"),
-                "plugin_version"=>$this->version,
-                "plugin_build"=>$this->build
+				"gmt_offset"=>get_option("gmt_offset"),
+				"plugin_version"=>$this->version,
+				"plugin_build"=>$this->build
 				)));
 			die();
 		}
@@ -327,6 +326,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 */
 		public function tm_aj_set_token() {
 			update_option('tm_coschedule_token', $_POST['token']);
+			update_option('tm_coschedule_id', $_POST['id']);
 			echo $_POST['token'];
 			die();
 		}
@@ -351,23 +351,23 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			$func = $args['call'];
 			unset($args['call']);
 
-            // Call public or private Function
-            if (isset($args['private'])) {
-                unset($args['private']);
-                $out = call_user_func_array(array($this, $func), $args);
-            } else {
-                $out = call_user_func_array($func, $args);
-            }
+			// Call public or private Function
+			if (isset($args['private'])) {
+				unset($args['private']);
+				$out = call_user_func_array(array($this, $func), $args);
+			} else {
+				$out = call_user_func_array($func, $args);
+			}
 
 			if (is_array($out)) {
 				echo json_encode($out);
 			} else {
-                // Check for errors
-                if (is_wp_error($out) ) {
-                    echo $out->get_error_message();
-                } else {
-                    echo $out;
-                }
+				// Check for errors
+				if (is_wp_error($out) ) {
+					echo $out->get_error_message();
+				} else {
+					echo $out;
+				}
 			}
 			die();
 		}
@@ -380,7 +380,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			$this->valid_token($_GET['token']);
 
 			delete_option('tm_coschedule_token');
-            die();
+			delete_option('tm_coschedule_id');
+			die();
 		}
 
 		/**
@@ -392,25 +393,25 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			return $post;
 		}
 
-        /**
-         * Get posts with permalinks and categories
-         */
-        public function get_posts_with_categories($args) {
-            // Load posts
-            $out = call_user_func_array('get_posts', $args);
+		/**
+		 * Get posts with permalinks and categories
+		 */
+		public function get_posts_with_categories($args) {
+			// Load posts
+			$out = call_user_func_array('get_posts', $args);
 
-            $posts = array();
-            foreach ($out as $post) {
-                $post = $this->get_full_post($post->ID);
-                if (!is_null($post['post_category'])) {
-                    $post['post_category'] = implode($post['post_category'], ',');
-                } else {
-                    $post['post_category'] = "";
-                }
-                array_push($posts, $post);
-            }
-            return $posts;
-        }
+			$posts = array();
+			foreach ($out as $post) {
+				$post = $this->get_full_post($post->ID);
+				if (!is_null($post['post_category'])) {
+					$post['post_category'] = implode($post['post_category'], ',');
+				} else {
+					$post['post_category'] = "";
+				}
+				array_push($posts, $post);
+			}
+			return $posts;
+		}
 
 		/**
 		 * Callback for when a post is created or updated
@@ -462,13 +463,13 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		public function save_user_callback($user_id) {
 			if ($this->connected) {
 				$user = get_userdata($user_id);
-                $can_edit = $user->has_cap('edit_posts');
-                if ($can_edit) {
-				    $this->api_post('/hook/wordpress_authors/save?_wordpress_key='. $this->token, (array)$user->data);
-                } else {
-                    // Remove
-                    $this->delete_user_callback($user_id);
-                }
+				$can_edit = $user->has_cap('edit_posts');
+				if ($can_edit) {
+					$this->api_post('/hook/wordpress_authors/save?_wordpress_key='. $this->token, (array)$user->data);
+				} else {
+					// Remove
+					$this->delete_user_callback($user_id);
+				}
 			}
 		}
 
@@ -499,60 +500,60 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			return $request->request($this->api.$url);
 		}
 
-        /**
-         * Get cache bust number from assets
-         * Returns: Number from text file
-         */
-        public function get_cache_bust() {
-            $location = 'http://cdn.coschedule.com/plugin/cache_bust.txt';
-            $request = new WP_Http;
-            $result = $request->request($location);
-            if (isset($result['body'])) {
-                return $result['body'];
-            }
-            return '0';
-        }
+		/**
+		 * Get cache bust number from assets
+		 * Returns: Number from text file
+		 */
+		public function get_cache_bust() {
+			$location = 'https://d27i93e1y9m4f5.cloudfront.net/plugin/cache_bust.txt';
+			$request = new WP_Http;
+			$result = $request->request($location);
+			if (is_array($result) && isset($result['body'])) {
+				return $result['body'];
+			}
+			return '0';
+		}
 
-        /**
-         * Given an array it html_entity_decodes every element of the array that is a string.
-         */
-        public function array_decode_entities($array){
-            $new_array = array();
+		/**
+		 * Given an array it html_entity_decodes every element of the array that is a string.
+		 */
+		public function array_decode_entities($array){
+			$new_array = array();
 
-            foreach ($array as $key => $string) {
-                if(is_string($string)) {
-                    $new_array[$key] = html_entity_decode($string, ENT_QUOTES);
-                } else {
-                    $new_array[$key] = $string;
-                }
-            }
+			foreach ($array as $key => $string) {
+				if(is_string($string)) {
+					$new_array[$key] = html_entity_decode($string, ENT_QUOTES);
+				} else {
+					$new_array[$key] = $string;
+				}
+			}
 
-            return $new_array;
-        }
+			return $new_array;
+		}
 
-        /**
-        * Edit Flow Fix: Runs before the edit flow function that modifies the post_date_gmt
-        */
-        public function fix_custom_status_timestamp_before($data) {
-            // Save post_date_gmt for later
-            global $cos_cached_post_date_gmt;
-            if (isset($data['post_date_gmt']) && !empty($data['post_date_gmt'])) {
-                $cos_cached_post_date_gmt = $data['post_date_gmt'];
-            }
+		/**
+		* Edit Flow Fix: Runs before the edit flow function that modifies the post_date_gmt
+		*/
+		public function fix_custom_status_timestamp_before($data) {
+			// Save post_date_gmt for later
+			global $cos_cached_post_date_gmt;
+			if (isset($data['post_date_gmt']) && !empty($data['post_date_gmt'])) {
+				$cos_cached_post_date_gmt = $data['post_date_gmt'];
+			}
 
-            return $data;
-        }
+			return $data;
+		}
 
-        /**
-        * Edit Flow Fix: Runs after the edit flow function that modifies the post_date_gmt
-        */
-        public function fix_custom_status_timestamp_after($data) {
-            global $cos_cached_post_date_gmt;
-            if (isset($cos_cached_post_date_gmt) && !empty($cos_cached_post_date_gmt)) {
-                $data['post_date_gmt'] = $cos_cached_post_date_gmt;
-            }
-            return $data;
-        }
+		/**
+		* Edit Flow Fix: Runs after the edit flow function that modifies the post_date_gmt
+		*/
+		public function fix_custom_status_timestamp_after($data) {
+			global $cos_cached_post_date_gmt;
+			if (isset($cos_cached_post_date_gmt) && !empty($cos_cached_post_date_gmt)) {
+				$data['post_date_gmt'] = $cos_cached_post_date_gmt;
+			}
+			return $data;
+		}
 	} // End tm_coschedule class
 
 	// Init Class
