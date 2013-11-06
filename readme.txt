@@ -34,7 +34,7 @@ You can install CoSchedule via the WordPress.org plugin directory or manually by
 
 = Manual =
 
-[youtube http://www.youtube.com/watch?v=xm9YCMTQZzM]
+[youtube http://www.youtube.com/watch?v=uK3un3Wt_Qo]
 
 1. Backup your WordPress database.
 2. Download the plugin zip file 'todaymade-coschedule.zip' to your computer.
