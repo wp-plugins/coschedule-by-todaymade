@@ -3,8 +3,8 @@ Contributors: todaymade
 Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.1
-Tested up to: 3.7
-Stable tag: 1.8.1
+Tested up to: 3.7.1
+Stable tag: 1.8.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,9 @@ Once you have the plugin installed, you can follow instructions found [here](htt
 
 == Changelog ==
 
+= 1.8.2 =
+* Fixes an issue with blogs that use custom post types
+
 = 1.8.1 =
 * Adds support for SSL connections
 * Improved user onboarding experience
@@ -101,6 +104,9 @@ Once you have the plugin installed, you can follow instructions found [here](htt
 * Private beta release
 
 == Upgrade Notice ==
+
+= 1.8.2 =
+* This update fixes an issues with blogs that use custom post types.
 
 = 1.8.1 =
 * This update contains several fixes, improvements and switches the plugin to use SSL connections.

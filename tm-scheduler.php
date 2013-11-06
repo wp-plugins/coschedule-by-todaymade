@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.8.1
+Version: 1.8.2
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.8.1";
-		private $build = 11;
+		private $version = "1.8.2";
+		private $build = 12;
 		private $connected = false;
 		private $token = false;
 
@@ -233,10 +233,14 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 */
 		public function meta_box_scripts() {
 			$cache_bust = $this->get_cache_bust();
+			$post_type = $this->get_current_post_type();
 
-			wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.css?cb='.$cache_bust);
-			wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
-			wp_enqueue_script('cos_js_plugin', $this->assets.'/js/plugin.js?cb='.$cache_bust, false, null, true);
+			// Only load our scripts on post
+			if($post_type === 'post') {
+				wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.css?cb='.$cache_bust);
+				wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
+				wp_enqueue_script('cos_js_plugin', $this->assets.'/js/plugin.js?cb='.$cache_bust, false, null, true);
+			}
 		}
 
 		/**
@@ -244,7 +248,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 */
 		public function meta_box_setup() {
 			add_meta_box(
-				'tm-scheduler',						// Unique ID
+				'tm-scheduler',						    // Unique ID
 				'CoSchedule',							// Title
 				array(&$this, 'meta_box_insert'),		// Callback function
 				'post',									// Admin page (or post type)
@@ -553,6 +557,32 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 				$data['post_date_gmt'] = $cos_cached_post_date_gmt;
 			}
 			return $data;
+		}
+
+		/**
+		* Get's the current post's post_type.
+		*/
+		public function get_current_post_type() {
+			global $post, $typenow, $current_screen;
+
+			//we have a post so we can just get the post type from that
+			if ($post && $post->post_type)
+				return $post->post_type;
+
+			//check the global $typenow - set in admin.php
+			elseif($typenow)
+				return $typenow;
+
+			//check the global $current_screen object - set in sceen.php
+			elseif($current_screen && $current_screen->post_type)
+				return $current_screen->post_type;
+
+			//lastly check the post_type querystring
+			elseif(isset( $_REQUEST['post_type']))
+				return sanitize_key( $_REQUEST['post_type']);
+
+			//we do not know the post type!
+			return null;
 		}
 	} // End tm_coschedule class
 

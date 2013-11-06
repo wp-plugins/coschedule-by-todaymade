@@ -59,7 +59,7 @@
 
             <div class="cos-hero-bottom">
                 <div class="pull-left">
-                    Version 1.8.1
+                    Version 1.8.2
                 </div>
                 <div class="pull-right">
                     <a href="#" id="tm_debug_toggle">Debug Information</a>
@@ -68,7 +68,7 @@
 
             <div class="cos-hero-debug-info" id="tm_debug_info" style="display:none;">
                 <p>Having problems with the plugin? Check out our <a href="http://coschedule.com/help" target="_blank">FAQ</a> documentation. You can also <a href="mailto:support@coschedule.com">drop us a line</a> including the following details and we'll do what we can.</p>
-                <textarea>URL: <?php echo get_option('siteurl'); ?> &#10;Timezone: <?php echo get_option('timezone_string').' -- GMT Offset: '.get_option('gmt_offset'); ?> &#10;CoS Version: 1.8.1 &#10;CoS Build: 11 &#10;CoS Token: <?php echo get_option('tm_coschedule_token'); ?> &#10;CoS ID: <?php echo get_option('tm_coschedule_id'); ?>&#10;CoS App: https://app.coschedule.com &#10;CoS Assets: https://d27i93e1y9m4f5.cloudfront.net &#10;CoS API: https://api.coschedule.com &#10;WP Version: <?php echo get_bloginfo('version'); ?> &#10;PHP Version: <?php echo phpversion(); ?> &#10;User String: <?php echo $_SERVER['HTTP_USER_AGENT']; ?> &#10;Active Theme: <?php $my_theme = wp_get_theme(); echo $my_theme->Name . " is version " . $my_theme->Version; ?> &#10;Plugins: &#10;<?php
+                <textarea>URL: <?php echo get_option('siteurl'); ?> &#10;Timezone: <?php echo get_option('timezone_string').' -- GMT Offset: '.get_option('gmt_offset'); ?> &#10;CoS Version: 1.8.2 &#10;CoS Build: 12 &#10;CoS Token: <?php echo get_option('tm_coschedule_token'); ?> &#10;CoS ID: <?php echo get_option('tm_coschedule_id'); ?>&#10;CoS App: https://app.coschedule.com &#10;CoS Assets: https://d27i93e1y9m4f5.cloudfront.net &#10;CoS API: https://api.coschedule.com &#10;WP Version: <?php echo get_bloginfo('version'); ?> &#10;PHP Version: <?php echo phpversion(); ?> &#10;User String: <?php echo $_SERVER['HTTP_USER_AGENT']; ?> &#10;Active Theme: <?php $my_theme = wp_get_theme(); echo $my_theme->Name . " is version " . $my_theme->Version; ?> &#10;Plugins: &#10;<?php
                 foreach (get_plugins() as $key => $plugin) {
                     $isactive = "";
                     if (is_plugin_active($key)) {
