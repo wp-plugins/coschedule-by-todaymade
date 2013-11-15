@@ -18,7 +18,7 @@ Auto publish and schedule your social media posts to facebook, twitter, linkedin
 
 Learn more at our website: [CoSchedule.com](http://coschedule.com)
 
-[youtube http://www.youtube.com/watch?v=ygq1zgkHZcs]
+[youtube http://www.youtube.com/watch?v=uK3un3Wt_Qo]
 
 == Installation ==
 
