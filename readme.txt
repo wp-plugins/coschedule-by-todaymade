@@ -18,7 +18,7 @@ Auto publish and schedule your social media posts to facebook, twitter, linkedin
 
 Learn more at our website: [CoSchedule.com](http://coschedule.com)
 
-[youtube http://www.youtube.com/watch?v=ygq1zgkHZcs]
+[youtube http://www.youtube.com/watch?v=uK3un3Wt_Qo]
 
 == Installation ==
 
@@ -34,7 +34,7 @@ You can install CoSchedule via the WordPress.org plugin directory or manually by
 
 = Manual =
 
-[youtube http://www.youtube.com/watch?v=xm9YCMTQZzM]
+[youtube http://www.youtube.com/watch?v=uK3un3Wt_Qo]
 
 1. Backup your WordPress database.
 2. Download the plugin zip file 'todaymade-coschedule.zip' to your computer.
