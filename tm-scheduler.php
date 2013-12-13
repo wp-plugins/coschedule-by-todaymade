@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.8.2
+Version: 1.9.0
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.8.2";
-		private $build = 12;
+		private $version = "1.9.0";
+		private $build = 13;
 		private $connected = false;
 		private $token = false;
 
@@ -240,6 +240,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 				wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.css?cb='.$cache_bust);
 				wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
 				wp_enqueue_script('cos_js_plugin', $this->assets.'/js/plugin.js?cb='.$cache_bust, false, null, true);
+                wp_enqueue_script('cos_js_transloadit', 'http://assets.transloadit.com/js/jquery.transloadit2-latest.js', false, null, true);
 			}
 		}
 
@@ -389,16 +390,52 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		}
 
 		/**
-		 * Get the post by id, with permalink
+		 * Get the post by id, with permalink and attachments
 		 */
 		public function get_full_post($post_id) {
 			$post = get_post($post_id, "ARRAY_A");
 			$post['permalink'] = get_permalink($post_id);
+
+            // Media attachments
+            $post['attachments'] = array();
+            $featured_image = $this->get_thumbnail($post_id);
+            if ($featured_image) {
+                array_push($post['attachments'], $featured_image);
+            }
+
+            // Merge and remove attachment duplicates
+            $post['attachments'] = array_merge($post['attachments'], $this->get_attachments($post_id));
+            $post['attachments'] = array_unique($post['attachments']);
+
+            // Generate an excerpt if one isn't available
+            if (isset($post['post_excerpt']) && empty($post['post_excerpt'])) {
+                $post['post_excerpt'] = $this->get_post_excerpt_by_id($post_id);
+            }
+
 			return $post;
 		}
 
+        /**
+         * Generate an excerpt by taking the first words of the post
+         */
+        public function get_post_excerpt_by_id($post_id) {
+            $the_post = get_post($post_id);
+            $the_excerpt = $the_post->post_content;
+            $excerpt_length = 35; // Sets excerpt length by word count
+            $the_excerpt = strip_tags(strip_shortcodes($the_excerpt)); //Strips tags and images
+            $words = explode(' ', $the_excerpt, $excerpt_length + 1);
+
+            if(count($words) > $excerpt_length) {
+                array_pop($words);
+                array_push($words, '…');
+                $the_excerpt = implode(' ', $words);
+            }
+
+            return $the_excerpt;
+        }
+
 		/**
-		 * Get posts with permalinks and categories
+		 * Get posts with permalinks, attachments, and categories
 		 */
 		public function get_posts_with_categories($args) {
 			// Load posts
@@ -416,6 +453,66 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			}
 			return $posts;
 		}
+
+        /**
+         * Get the thumbnail url of the post
+         */
+        public function get_thumbnail($post_id) {
+            $post_thumbnail_id = get_post_thumbnail_id($post_id);
+            $post_thumbnail_url = wp_get_attachment_url($post_thumbnail_id);
+            $site_url = get_site_url();
+
+            // remove trailing slash from site url
+            if(substr($site_url, -1) == '/') {
+                $site_url = substr($site_url, 0, -1);
+            }
+
+            // Only include valid URL
+            if (is_string($post_thumbnail_url) && strlen($post_thumbnail_url) > 0) {
+                // Older versions of WordPress (<3.6) may exclude site URL from attachment URL
+                if (strpos($post_thumbnail_url, 'http') === FALSE) {
+                    $post_thumbnail_url = $site_url . $post_thumbnail_url;
+                }
+            } else {
+                $post_thumbnail_url = null;
+            }
+
+            return $post_thumbnail_url;
+        }
+
+        /**
+         * Get array of all attachments of the post
+         */
+        public function get_attachments($post_id) {
+            $attachments = array();
+            $site_url = get_site_url();
+
+            // remove trailing slash from site url
+            if(substr($site_url, -1) == '/') {
+                $site_url = substr($site_url, 0, -1);
+            }
+
+            // Get all images of the post
+            $images =& get_children('post_type=attachment&post_mime_type=image&output=ARRAY_N&orderby=menu_order&order=ASC&post_parent='.$post_id);
+
+            // Loop through images to get URLs
+            if($images){
+                foreach($images as $image_id => $image_post){
+                    $image_url = wp_get_attachment_url($image_id);
+
+                    // Only include valid URLs
+                    if (is_string($image_url)) {
+                        // Older versions of WordPress (<3.6) may exclude site URL from attachment URL
+                        if (strpos($image_url, 'http') === FALSE) {
+                            $image_url = $site_url . $image_url;
+                        }
+                        array_push($attachments, $image_url);
+                    }
+                }
+            }
+
+            return $attachments;
+        }
 
 		/**
 		 * Callback for when a post is created or updated
