@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.0
+Version: 1.9.1
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.0";
-		private $build = 13;
+		private $version = "1.9.1";
+		private $build = 14;
 		private $connected = false;
 		private $token = false;
 
@@ -313,7 +313,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 				"timezone_string"=>get_option("timezone_string"),
 				"gmt_offset"=>get_option("gmt_offset"),
 				"plugin_version"=>$this->version,
-				"plugin_build"=>$this->build
+				"plugin_build"=>$this->build,
+                "installed_plugins"=>$this->get_installed_plugins()
 				)));
 			die();
 		}
@@ -512,6 +513,25 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             }
 
             return $attachments;
+        }
+
+        /**
+         * Get currated array of all plugins installed in this blog
+         */
+        public function get_installed_plugins() {
+            $plugins = array();
+
+            foreach (get_plugins() as $key => $plugin) {
+                $p = array(
+                    'Name' => $plugin['Name'],
+                    'Version' => $plugin['Version'],
+                    'Website' => $plugin['AuthorURI'],
+                    'Status' => is_plugin_active($key) ? "Active" : "Inactive"
+                );
+                array_push($plugins, $p);
+            }
+
+            return $plugins;
         }
 
 		/**
