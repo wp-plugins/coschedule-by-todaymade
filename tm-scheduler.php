@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.1
+Version: 1.9.2
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.1";
-		private $build = 14;
+		private $version = "1.9.2";
+		private $build = 15;
 		private $connected = false;
 		private $token = false;
 
@@ -301,21 +301,26 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 * Ajax: Return blog info
 		 */
 		public function tm_aj_get_bloginfo() {
-			echo json_encode($this->array_decode_entities(array(
-				"name"=>get_bloginfo("name"),
-				"description"=>get_bloginfo("description"),
-				"wpurl"=>get_bloginfo("wpurl"),
-				"url"=>get_bloginfo("url"),
-				"version"=>get_bloginfo("version"),
-				"language"=>get_bloginfo("language"),
-				"pingback_url"=>get_bloginfo("pingback_url"),
-				"rss2_url"=>get_bloginfo("rss2_url"),
-				"timezone_string"=>get_option("timezone_string"),
-				"gmt_offset"=>get_option("gmt_offset"),
-				"plugin_version"=>$this->version,
-				"plugin_build"=>$this->build,
-                "installed_plugins"=>$this->get_installed_plugins()
-				)));
+            $vars = array(
+                "name"=>get_bloginfo("name"),
+                "description"=>get_bloginfo("description"),
+                "wpurl"=>get_bloginfo("wpurl"),
+                "url"=>get_bloginfo("url"),
+                "version"=>get_bloginfo("version"),
+                "language"=>get_bloginfo("language"),
+                "pingback_url"=>get_bloginfo("pingback_url"),
+                "rss2_url"=>get_bloginfo("rss2_url"),
+                "timezone_string"=>get_option("timezone_string"),
+                "gmt_offset"=>get_option("gmt_offset"),
+                "plugin_version"=>$this->version,
+                "plugin_build"=>$this->build
+            );
+
+            if (isset($_GET['debug'])) {
+                $vars["installed_plugins"] = $this->get_installed_plugins();
+            }
+
+			echo json_encode($this->array_decode_entities($vars));
 			die();
 		}
 
