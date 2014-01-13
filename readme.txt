@@ -11,14 +11,59 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 This plugin connects to CoSchedule, a team content marketing editorial calendar. Send unlimited social messages with each blog post.
 
 == Description ==
+Finally, there is an all-in-one [editorial calendar plugin for WordPress](http://coschedule.com/wordpress-editorial-calendar-plugin  "Social Media Auto Publish Editorial Calendar Plugin For WordPress") that brings true automated social media publishing to your blog!
 
-This plugin connects to CoSchedule, the all-in-one content marketing editorial calendar for WordPress. It allows you to visually schedule blog posts with your team and automatically send messages to your social networks.
+CoSchedule is the first (and only) social media editorial calendar for WordPress that allows you to schedule your blog and social media on the same drag-and-drop calendar.
 
-Auto publish and schedule your social media posts to facebook, twitter, linkedin, and tumblr.
+Now, you can save time and grow traffic by scheduling blog posts and social media at the same time!
 
-Learn more at our website: [CoSchedule.com](http://coschedule.com)
+[Try It Free Now](http://coschedule.com/sign-up "Content Marketing Editorial Calendar Plugin For WordPress")
+
+
+CoSchedule allows you to create a queue of social media messages that will be automatically sent once your blog post goes live. Even better, if you drag a blog post from one date to another on the editorial calendar, your social media messages move with it. This allows bloggers to create a series of messages that promote their blog posts on a rolling schedule, and also reschedule them with ease!
+
+CoSchedule is a lightweight social sharing plugin that runs off of our own hand-crafted API to ensure that social media and blog scheduling is 100% reliable. It is a paid (monthly) service, but you can [try it free for 14 days](http://coschedule.com/sign-up "Social Media Editorial Calendar Plugin For WordPress").
+
+#### Features
+* Drag-And-Drop Editorial Calendar
+* Automated Social Publishing
+* Schedule Social Media While You Blog
+* Editorial Comments
+* Team Workflow Management
+* Notifications And Blog Management Center
+* Lightweight WordPress Plugin
+* All-In-One Publishing Solution
+* 2-Minute Installation
+* Beautiful Modern Design
+
 
 [youtube http://www.youtube.com/watch?v=uK3un3Wt_Qo]
+
+#### Social Media Auto-Publish While You Blog
+With CoSchedule, you can automate your social media sharing while you blog. When your blog post is published, CoSchedule will automatically send your designated queue of messages to the most popular social networks:
+
+* Twitter
+* Facebook Profiles
+* Facebook Pages
+* LinkedIn Profiles
+* LinkedIn Business Pages
+* LinkedIn Groups
+* Google+ Pages
+* Buffer
+* Tumblr
+
+#### A Visual Way To Plan Your Content
+Like Edit Flow, CoSchedule a fully-functioning editorial calendar for WordPress. Schedule your blog with drag-and-drop ease.
+
+
+#### Keep Your Team In The Loop
+CoSchedule has full support for editorial comments, and even allows you to assign tasks to your authors and team members. It is an all-in-one-publishing solution.
+
+#### The All-In-One Publishing Solution
+This plugin connects to CoSchedule, the all-in-one content marketing editorial calendar for WordPress. It allows you to visually schedule blog posts with your team and automatically send messages to your social networks. Imagine true social media automation for Facebook, Twitter, LinkedIn, Google+ and Tumblr.
+
+#### Save Time With CoSchedule
+You can save a ton of time with CoSchedule. Most of our users tell us that they blog more, [schedule more social media messages](http://coschedule.com/blog/promote-your-blog-with-social-media/ "How To Promote Your Blog With Social Media"), and get more traffic. The bottom line is that CoSchedule will make you a better blogger.
 
 == Installation ==
 
@@ -66,6 +111,10 @@ CoSchedule is an all-in-one editorial calendar that makes it easier to create, m
 = How do I use CoSchedule? =
 
 Once you have the plugin installed, you can follow instructions found [here](http://coschedule.com/help) that will help you get maximum use out of your CoSchedule account.
+
+= How much does CoSchedule cost? =
+
+We charge a monthly fee for CoSchedule because we provide an ongoing service that publishes your blog posts and social media messages using a robust API. CoSchedule is low-cost at only $10/month. It is fully integrated with WordPress, Twitter, Facebook, LinkedIn, Google+, Buffer, and Tumblr.
 
 == Screenshots ==
 
