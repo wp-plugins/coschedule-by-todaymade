@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.2
+Version: 1.9.3
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.2";
-		private $build = 15;
+		private $version = "1.9.3";
+		private $build = 16;
 		private $connected = false;
 		private $token = false;
 
@@ -317,7 +317,27 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             );
 
             if (isset($_GET['debug'])) {
-                $vars["installed_plugins"] = $this->get_installed_plugins();
+                $vars["debug"] = array();
+                $vars["debug"]["server_time"] = time();
+                $vars["debug"]["server_date"] = date('c');
+                $vars["debug"]["site_url"] = get_option('siteurl');
+                $vars["debug"]["php_version"] = phpversion();
+
+                $theme = wp_get_theme();
+                $vars["debug"]["theme"] = array();
+                $vars["debug"]["theme"]["Name"] = $theme->get('Name');
+                $vars["debug"]["theme"]["ThemeURI"] = $theme->get('ThemeURI');
+                $vars["debug"]["theme"]["Description"] = $theme->get('Description');
+                $vars["debug"]["theme"]["Author"] = $theme->get('Author');
+                $vars["debug"]["theme"]["AuthorURI"] = $theme->get('AuthorURI');
+                $vars["debug"]["theme"]["Version"] = $theme->get('Version');
+                $vars["debug"]["theme"]["Template"] = $theme->get('Template');
+                $vars["debug"]["theme"]["Status"] = $theme->get('Status');
+                $vars["debug"]["theme"]["Tags"] = $theme->get('Tags');
+                $vars["debug"]["theme"]["TextDomain"] = $theme->get('TextDomain');
+                $vars["debug"]["theme"]["DomainPath"] = $theme->get('DomainPath');
+
+                $vars["debug"]["plugins"] = $this->get_installed_plugins();
             }
 
 			echo json_encode($this->array_decode_entities($vars));
@@ -525,15 +545,18 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          */
         public function get_installed_plugins() {
             $plugins = array();
+            $plugins['active'] = array();
+            $plugins['inactive'] = array();
 
             foreach (get_plugins() as $key => $plugin) {
-                $p = array(
-                    'Name' => $plugin['Name'],
-                    'Version' => $plugin['Version'],
-                    'Website' => $plugin['AuthorURI'],
-                    'Status' => is_plugin_active($key) ? "Active" : "Inactive"
-                );
-                array_push($plugins, $p);
+                $plugin["path"] = $key;
+                $plugin["status"] = is_plugin_active($key) ? "Active" : "Inactive";
+
+                if (is_plugin_active($key)) {
+                    array_push($plugins['active'], $plugin);
+                } else {
+                    array_push($plugins['inactive'], $plugin);
+                }
             }
 
             return $plugins;
