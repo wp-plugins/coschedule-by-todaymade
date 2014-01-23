@@ -2,18 +2,18 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.3
+Version: 1.9.4
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
 */
 
 // Check for existing class
-if ( ! class_exists( 'tm_coschedule' ) ) {
+if (!class_exists('tm_coschedule')) {
 
 	// Include Http Class
-	if(!class_exists( 'WP_Http' )) {
-		include_once( ABSPATH . WPINC. '/class-http.php' );
+	if(!class_exists('WP_Http')) {
+		include_once(ABSPATH . WPINC. '/class-http.php');
 	}
 
 	/**
@@ -22,8 +22,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.3";
-		private $build = 16;
+		private $version = "1.9.4";
+		private $build = 17;
 		private $connected = false;
 		private $token = false;
 
@@ -35,8 +35,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		}
 
 		public function tm_coschedule() {
-			register_activation_hook( __FILE__, array($this, 'activation' ) );
-			register_deactivation_hook( __FILE__, array($this, 'deactivation' ) );
+			register_activation_hook(__FILE__, array($this, 'activation'));
+			register_deactivation_hook(__FILE__, array($this, 'deactivation'));
 
 			// Load token
 			$this->token = get_option('tm_coschedule_token');
@@ -68,8 +68,22 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 * Handles activation tasks, such as registering the uninstall hook.
 		 */
 		public function activation() {
-			register_uninstall_hook( __FILE__, array($this, 'uninstall'));
+			register_uninstall_hook(__FILE__, array('tm_coschedule', 'uninstall'));
+
+            // Set redirection to true
+            add_option('tm_coschedule_activation_redirect', true);
 		}
+
+        /**
+         * Checks to see if the plugin was just activated to redirect them to settings
+         */
+        public function activation_redirect() {
+            if (get_option('tm_coschedule_activation_redirect', false)) {
+                // Redirect to settings page
+                delete_option('tm_coschedule_activation_redirect');
+                wp_redirect('options-general.php?page=tm_coschedule');
+            }
+        }
 
 		/**
 		 * Handles deactivation tasks, such as deleting plugin options.
@@ -77,6 +91,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		public function deactivation() {
 			delete_option('tm_coschedule_token');
 			delete_option('tm_coschedule_id');
+            delete_option('tm_coschedule_activation_redirect');
+            delete_option('tm_coschedule_custom_post_types_list');
 		}
 
 		/**
@@ -85,6 +101,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		public function uninstall() {
 			delete_option('tm_coschedule_token');
 			delete_option('tm_coschedule_id');
+            delete_option('tm_coschedule_activation_redirect');
+            delete_option('tm_coschedule_custom_post_types_list');
 		}
 
 		/**
@@ -133,6 +151,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			// Ajax: Set token
 			add_action('wp_ajax_tm_aj_set_token', array($this, 'tm_aj_set_token'));
 
+            // Ajax: Set custom post types
+            add_action('wp_ajax_tm_aj_set_custom_post_types', array($this, 'tm_aj_set_custom_post_types'));
+            add_action('wp_ajax_nopriv_tm_aj_set_custom_post_types', array($this, 'tm_aj_set_custom_post_types'));
+
 			// Ajax: Get function
 			add_action('wp_ajax_tm_aj_function', array($this, 'tm_aj_function'));
 			add_action('wp_ajax_nopriv_tm_aj_function', array($this, 'tm_aj_function'));
@@ -146,6 +168,9 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 
 			// Add settings link to plugins listing page
 			add_filter('plugin_action_links', array($this, 'plugin_settings_link'), 2, 2);
+
+            // Add check for activation redirection
+            add_action('admin_init', array($this, 'activation_redirect'));
 		}
 
 		/**
@@ -157,7 +182,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			// Enqueue scripts for settings
 			add_action('admin_print_styles-' . $settings_1, array($this, 'plugin_settings_scripts'));
 
-			// Swith main nav link between settings and the calendar depending on if they are connected
+			// Switch main nav link between settings and the calendar depending on if they are connected
 			if ($this->connected) {
 				add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_calendar_page'), $this->assets.'/plugin/icon.png', '50.505' );
 			} else {
@@ -221,6 +246,47 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			);
 		}
 
+        /**
+         * Checks if the meta box should be included on the page based on post type
+         */
+        public function meta_box_enabled() {
+            $post_type = $this->get_current_post_type();
+            $custom_post_types_list = get_option('tm_coschedule_custom_post_types_list');
+
+            // Grab remote list if not set
+            if (!$custom_post_types_list) {
+                if ($this->connected) {
+                    // Load remote blog information
+                    $resp = $this->api_get('/wordpress_keys?_wordpress_key='. $this->token);
+                    if (isset($resp['response']['code']) && $resp['response']['code'] === 200) {
+                        $json = json_decode($resp['body'], true);
+
+                        // Check for a good response
+                        if (isset($json['result'][0]) && $json['result'][0]['custom_post_types']) {
+                            $custom_post_types_list = $json['result'][0]['custom_post_types_list'];
+
+                            // Save custom list
+                            if (!empty($custom_post_types_list)) {
+                                update_option('tm_coschedule_custom_post_types_list', $custom_post_types_list);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Default
+            if (empty($custom_post_types_list)) {
+                $custom_post_types_list = 'post';
+                update_option('tm_coschedule_custom_post_types_list', $custom_post_types_list);
+            }
+
+            // Convert to an array
+            $custom_post_types_list_array = explode(',', $custom_post_types_list);
+
+            // Check if post type is supported
+            return in_array($post_type, $custom_post_types_list_array);
+        }
+
 		/**
 		 * Adds action to insert a meta box
 		 */
@@ -232,11 +298,9 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 * Enqueue the css and js for the metabox
 		 */
 		public function meta_box_scripts() {
-			$cache_bust = $this->get_cache_bust();
-			$post_type = $this->get_current_post_type();
-
-			// Only load our scripts on post
-			if($post_type === 'post') {
+            $enabled = $this->meta_box_enabled();
+            if ($enabled) {
+                $cache_bust = $this->get_cache_bust();
 				wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.css?cb='.$cache_bust);
 				wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
 				wp_enqueue_script('cos_js_plugin', $this->assets.'/js/plugin.js?cb='.$cache_bust, false, null, true);
@@ -248,14 +312,18 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 		 * Sets up the meta box to be inserted
 		 */
 		public function meta_box_setup() {
-			add_meta_box(
-				'tm-scheduler',						    // Unique ID
-				'CoSchedule',							// Title
-				array(&$this, 'meta_box_insert'),		// Callback function
-				'post',									// Admin page (or post type)
-				'normal',								// Context
-				'default'								// Priority
-			);
+            $enabled = $this->meta_box_enabled();
+            if ($enabled) {
+                $post_type = $this->get_current_post_type();
+    			add_meta_box(
+    				'tm-scheduler',						    // Unique ID
+    				'CoSchedule',							// Title
+    				array(&$this, 'meta_box_insert'),		// Callback function
+    				$post_type,								// Admin page (or post type)
+    				'normal',								// Context
+    				'default'								// Priority
+    			);
+            }
 		}
 
 		/**
@@ -361,6 +429,15 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 			echo $_POST['token'];
 			die();
 		}
+
+        /**
+         * Ajax: Set custom post types
+         */
+        public function tm_aj_set_custom_post_types() {
+            echo $_GET['post_types_list'];
+            update_option('tm_coschedule_custom_post_types_list', $_GET['post_types_list']);
+            die();
+        }
 
 		/**
 		 * Ajax: Get function
