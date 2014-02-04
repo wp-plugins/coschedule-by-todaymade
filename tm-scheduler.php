@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.4
+Version: 1.9.5
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.4";
-		private $build = 17;
+		private $version = "1.9.5";
+		private $build = 18;
 		private $connected = false;
 		private $token = false;
 
@@ -360,6 +360,7 @@ if (!class_exists('tm_coschedule')) {
 			if ($validate === true) {
 				return true;
 			} else {
+                header('Content-Type: application/json');
 				echo json_encode(array("error"=>$validate));
 				die();
 			}
@@ -369,6 +370,8 @@ if (!class_exists('tm_coschedule')) {
 		 * Ajax: Return blog info
 		 */
 		public function tm_aj_get_bloginfo() {
+            header('Content-Type: application/json');
+
             $vars = array(
                 "name"=>get_bloginfo("name"),
                 "description"=>get_bloginfo("description"),
@@ -416,6 +419,8 @@ if (!class_exists('tm_coschedule')) {
 		 * Ajax: Return full post with permalink
 		 */
 		public function tm_aj_get_full_post() {
+            header('Content-Type: application/json');
+
 			echo json_encode($this->get_full_post($_GET['post_id']));
 			die();
 		}
@@ -424,8 +429,11 @@ if (!class_exists('tm_coschedule')) {
 		 * Ajax: Set token
 		 */
 		public function tm_aj_set_token() {
+            header('Content-Type: text/plain');
+
 			update_option('tm_coschedule_token', $_POST['token']);
 			update_option('tm_coschedule_id', $_POST['id']);
+
 			echo $_POST['token'];
 			die();
 		}
@@ -434,6 +442,8 @@ if (!class_exists('tm_coschedule')) {
          * Ajax: Set custom post types
          */
         public function tm_aj_set_custom_post_types() {
+            header('Content-Type: text/plain');
+
             echo $_GET['post_types_list'];
             update_option('tm_coschedule_custom_post_types_list', $_GET['post_types_list']);
             die();
@@ -468,8 +478,10 @@ if (!class_exists('tm_coschedule')) {
 			}
 
 			if (is_array($out)) {
+                header('Content-Type: application/json');
 				echo json_encode($out);
 			} else {
+                header('Content-Type: text/plain');
 				// Check for errors
 				if (is_wp_error($out) ) {
 					echo $out->get_error_message();
@@ -484,6 +496,7 @@ if (!class_exists('tm_coschedule')) {
 		 * AJAX: Handles deactivation task
 		 */
 		public function tm_aj_deactivation() {
+            header('Content-Type: text/plain');
 			// Validate call
 			$this->valid_token($_GET['token']);
 
