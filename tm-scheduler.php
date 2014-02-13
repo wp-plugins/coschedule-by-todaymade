@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.5
+Version: 1.9.6
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.5";
-		private $build = 18;
+		private $version = "1.9.6";
+		private $build = 19;
 		private $connected = false;
 		private $token = false;
 
@@ -536,7 +536,7 @@ if (!class_exists('tm_coschedule')) {
          */
         public function get_post_excerpt_by_id($post_id) {
             $the_post = get_post($post_id);
-            $the_excerpt = $the_post->post_content;
+            $the_excerpt = html_entity_decode($the_post->post_content, ENT_QUOTES, 'UTF-8');
             $excerpt_length = 35; // Sets excerpt length by word count
             $the_excerpt = strip_tags(strip_shortcodes($the_excerpt)); //Strips tags and images
             $words = explode(' ', $the_excerpt, $excerpt_length + 1);
@@ -546,6 +546,9 @@ if (!class_exists('tm_coschedule')) {
                 array_push($words, '…');
                 $the_excerpt = implode(' ', $words);
             }
+
+            // Remove undesirable whitespace and condense consecutive spaces
+            $the_excerpt = preg_replace('/\s+/', " ", $the_excerpt);
 
             return $the_excerpt;
         }
