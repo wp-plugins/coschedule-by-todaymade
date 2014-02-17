@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.6
+Version: 1.9.7
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.6";
-		private $build = 19;
+		private $version = "1.9.7";
+		private $build = 20;
 		private $connected = false;
 		private $token = false;
 
@@ -468,6 +468,11 @@ if (!class_exists('tm_coschedule')) {
 			// Save and remove function name
 			$func = $args['call'];
 			unset($args['call']);
+
+            // Fix: Prevent WP from stripping iframe tags when updating post
+            if ($func === "wp_update_post") {
+                remove_filter('content_save_pre', 'wp_filter_post_kses');
+            }
 
 			// Call public or private Function
 			if (isset($args['private'])) {
