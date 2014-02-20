@@ -1,4 +1,6 @@
-<?php if (get_option('tm_coschedule_id')) {?>
+<?php if (isset($_GET['tm_cos_user_token']) && !empty($_GET['tm_cos_user_token'])) {?>
+    <iframe id="CoSiFrame" frameborder=0 border=0 src="https://app.coschedule.com/#/token/<?php echo $_GET['tm_cos_user_token']; ?>" width="100%"></iframe>
+<?php } elseif (get_option('tm_coschedule_id')) {?>
     <iframe id="CoSiFrame" frameborder=0 border=0 src="https://app.coschedule.com/#/blog/<?php echo get_option('tm_coschedule_id'); ?>/schedule" width="100%"></iframe>
 <?php } else { ?>
     <iframe id="CoSiFrame" frameborder=0 border=0 src="https://app.coschedule.com" width="100%"></iframe>

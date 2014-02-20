@@ -42,13 +42,35 @@
                             <div id="tm_activate" style="display:none;">
                                 <label for="tm_coschedule_token"><h3>Connect to CoSchedule</h3></label>
                                 <div id="tm_coschedule_alert" class="alert" style="display:none;"></div>
-                                <form name="connect-blog">
-                                    <label class="form-label ie-only text-left">Email Address</label>
-                                    <input class="input-jumbo input-block-level" type="text" name="tm_coschedule_email" id="tm_coschedule_email" placeholder="email"><br>
-                                    <label class="form-label ie-only text-left">Password</label>
-                                    <input class="input-jumbo input-block-level" type="password" name="tm_coschedule_password" id="tm_coschedule_password" placeholder="password"><br>
-                                    <button type="submit" class="btn btn-blue btn-jumbo btn-block btn-caps" id="tm_activate_button">Connect</button>
-                                    <p>Activate your plugin by connecting to CoSchedule. If you don’t have an account, you can <a href="http://app.coschedule.com/#/register" target="_blank">register here</a>.</p>
+
+                                <form name="connect-blog" id="tm_form_login" style="display: none;">
+                                    <!-- Select Mode -->
+                                    <div id="tm_form_mode" style="display: none;">
+                                        <button class="btn btn-jumbo btn-block btn-caps" id="tm_form_mode_login">Login</button><br>
+                                        <button class="btn btn-jumbo btn-block btn-caps" id="tm_form_mode_register">Register</button>
+                                    </div>
+
+                                    <!-- Login form -->
+                                    <div id="tm_form_login" style="display: none;">
+                                        <label class="form-label ie-only text-left">Email Address</label>
+                                        <input class="input-jumbo input-block-level" type="text" name="tm_coschedule_email" id="tm_coschedule_email" placeholder="email"><br>
+                                        <label class="form-label ie-only text-left">Password</label>
+                                        <input class="input-jumbo input-block-level" type="password" name="tm_coschedule_password" id="tm_coschedule_password" placeholder="password"><br>
+                                        <button type="submit" class="btn btn-blue btn-jumbo btn-block btn-caps" id="tm_activate_button">Login</button>
+                                        <p>Activate your plugin by connecting to CoSchedule. If you don’t have an account, you can <a href="#" class="tm_form_toggle">register here</a>.</p>
+                                    </div>
+
+                                    <!-- Registration form -->
+                                    <div id="tm_form_register" style="display: none;">
+                                        <label class="form-label ie-only text-left">Full Name</label>
+                                        <input class="input-jumbo input-block-level" type="text" name="tm_coschedule_name" id="tm_coschedule_name_register" placeholder="name"><br>
+                                        <label class="form-label ie-only text-left">Email Address</label>
+                                        <input class="input-jumbo input-block-level" type="text" name="tm_coschedule_email" id="tm_coschedule_email_register" placeholder="email"><br>
+                                        <label class="form-label ie-only text-left">Password</label>
+                                        <input class="input-jumbo input-block-level" type="password" name="tm_coschedule_password" id="tm_coschedule_password_register" placeholder="password"><br>
+                                        <button type="submit" class="btn btn-blue btn-jumbo btn-block btn-caps" id="tm_activate_button_register">Register</button>
+                                        <p>Activate your plugin by connecting to CoSchedule. If you already have an account, you can <a href="#" class="tm_form_toggle">login here</a>.</p>
+                                    </div>
                                     <input type="hidden" id="" value="">
                                 </form>
                             </div>
@@ -59,7 +81,7 @@
 
             <div class="cos-hero-bottom">
                 <div class="pull-left">
-                    Version 1.9.7
+                    Version 1.9.8
                 </div>
                 <div class="pull-right">
                     <a href="#" id="tm_debug_toggle">Debug Information</a>
@@ -68,7 +90,7 @@
 
             <div class="cos-hero-debug-info" id="tm_debug_info" style="display:none;">
                 <p>Having problems with the plugin? Check out our <a href="http://coschedule.com/help" target="_blank">FAQ</a> documentation. You can also <a href="mailto:support@coschedule.com">drop us a line</a> including the following details and we'll do what we can.</p>
-                <textarea>URL: <?php echo get_option('siteurl'); ?> &#10;Timezone: <?php echo get_option('timezone_string').' -- GMT Offset: '.get_option('gmt_offset'); ?> &#10;CoS Version: 1.9.7 &#10;CoS Build: 20 &#10;CoS Token: <?php echo get_option('tm_coschedule_token'); ?> &#10;CoS ID: <?php echo get_option('tm_coschedule_id'); ?>&#10;CoS App: https://app.coschedule.com &#10;CoS Assets: https://d27i93e1y9m4f5.cloudfront.net &#10;CoS API: https://api.coschedule.com &#10;WP Version: <?php echo get_bloginfo('version'); ?> &#10;PHP Version: <?php echo phpversion(); ?> &#10;User String: <?php echo $_SERVER['HTTP_USER_AGENT']; ?> &#10;Active Theme: <?php $my_theme = wp_get_theme(); echo $my_theme->Name . " is version " . $my_theme->Version; ?> &#10;Plugins: &#10;<?php
+                <textarea>URL: <?php echo get_option('siteurl'); ?> &#10;Timezone: <?php echo get_option('timezone_string').' -- GMT Offset: '.get_option('gmt_offset'); ?> &#10;CoS Version: 1.9.8 &#10;CoS Build: 21 &#10;CoS Token: <?php echo get_option('tm_coschedule_token'); ?> &#10;CoS ID: <?php echo get_option('tm_coschedule_id'); ?>&#10;CoS App: https://app.coschedule.com &#10;CoS Assets: https://d27i93e1y9m4f5.cloudfront.net &#10;CoS API: https://api.coschedule.com &#10;WP Version: <?php echo get_bloginfo('version'); ?> &#10;PHP Version: <?php echo phpversion(); ?> &#10;User String: <?php echo $_SERVER['HTTP_USER_AGENT']; ?> &#10;Active Theme: <?php $my_theme = wp_get_theme(); echo $my_theme->Name . " is version " . $my_theme->Version; ?> &#10;Plugins: &#10;<?php
                 foreach (get_plugins() as $key => $plugin) {
                     $isactive = "";
                     if (is_plugin_active($key)) {
