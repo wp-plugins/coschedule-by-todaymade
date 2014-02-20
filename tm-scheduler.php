@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.8
+Version: 1.9.9
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.8";
-		private $build = 21;
+		private $version = "1.9.9";
+		private $build = 22;
 		private $connected = false;
 		private $token = false;
 
@@ -431,10 +431,15 @@ if (!class_exists('tm_coschedule')) {
 		public function tm_aj_set_token() {
             header('Content-Type: text/plain');
 
-			update_option('tm_coschedule_token', $_POST['token']);
-			update_option('tm_coschedule_id', $_POST['id']);
-
-			echo $_POST['token'];
+            if (isset($_POST['token'])) {
+    			update_option('tm_coschedule_token', $_POST['token']);
+    			update_option('tm_coschedule_id', $_POST['id']);
+    			echo $_POST['token'];
+            } else if (isset($_GET['token'])) {
+                update_option('tm_coschedule_token', $_GET['token']);
+                update_option('tm_coschedule_id', $_GET['id']);
+                echo $_GET['token'];
+            }
 			die();
 		}
 
