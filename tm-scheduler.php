@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.9
+Version: 1.9.10
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.9";
-		private $build = 22;
+		private $version = "1.9.10";
+		private $build = 23;
 		private $connected = false;
 		private $token = false;
 
@@ -150,6 +150,10 @@ if (!class_exists('tm_coschedule')) {
 
 			// Ajax: Set token
 			add_action('wp_ajax_tm_aj_set_token', array($this, 'tm_aj_set_token'));
+
+            // Ajax: Check token
+            add_action('wp_ajax_tm_aj_check_token', array($this, 'tm_aj_check_token'));
+            add_action('wp_ajax_nopriv_tm_aj_check_token', array($this, 'tm_aj_check_token'));
 
             // Ajax: Set custom post types
             add_action('wp_ajax_tm_aj_set_custom_post_types', array($this, 'tm_aj_set_custom_post_types'));
@@ -442,6 +446,33 @@ if (!class_exists('tm_coschedule')) {
             }
 			die();
 		}
+
+        /**
+         * Ajax: Check a token against the current token
+         */
+        public function tm_aj_check_token() {
+            header('Content-Type: text/plain');
+
+            // Check request token
+            if (!isset($_GET['token']) || empty($_GET['token'])) {
+                echo 'Token not provided in request';
+                die();
+            }
+
+            // Check stored token
+            if (!isset($this->token) || empty($this->token)) {
+                echo 'No token saved in WordPress';
+                die();
+            }
+
+            // Compare
+            if ($_GET['token'] == $this->token) {
+                echo "Tokens match";
+            } else {
+                echo "Tokens do not match";
+            }
+            die();
+        }
 
         /**
          * Ajax: Set custom post types
