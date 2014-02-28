@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.10
+Version: 1.9.11
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.10";
-		private $build = 23;
+		private $version = "1.9.11";
+		private $build = 24;
 		private $connected = false;
 		private $token = false;
 
@@ -564,9 +564,27 @@ if (!class_exists('tm_coschedule')) {
             $post['attachments'] = array_merge($post['attachments'], $this->get_attachments($post_id));
             $post['attachments'] = array_unique($post['attachments']);
 
-            // Generate an excerpt if one isn't available
-            if (isset($post['post_excerpt']) && empty($post['post_excerpt'])) {
-                $post['post_excerpt'] = $this->get_post_excerpt_by_id($post_id);
+            // Fill except and remove content
+            if (isset($post['post_content'])) {
+                // Generate an excerpt if one isn't available
+                if (!isset($post['post_excerpt']) || (isset($post['post_excerpt']) && empty($post['post_excerpt']))) {
+                    $post['post_excerpt'] = $this->get_post_excerpt($post['post_content']);
+                }
+
+                // Remove content
+                unset($post['post_content']);
+            }
+
+            // Remove content filtered
+            if (isset($post['post_content_filtered'])) {
+                unset($post['post_content_filtered']);
+            }
+
+            // Process category
+            if (!is_null($post['post_category'])) {
+                $post['post_category'] = implode($post['post_category'], ',');
+            } else {
+                $post['post_category'] = "";
             }
 
 			return $post;
@@ -575,9 +593,8 @@ if (!class_exists('tm_coschedule')) {
         /**
          * Generate an excerpt by taking the first words of the post
          */
-        public function get_post_excerpt_by_id($post_id) {
-            $the_post = get_post($post_id);
-            $the_excerpt = html_entity_decode($the_post->post_content, ENT_QUOTES, 'UTF-8');
+        public function get_post_excerpt($content) {
+            $the_excerpt = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
             $excerpt_length = 35; // Sets excerpt length by word count
             $the_excerpt = strip_tags(strip_shortcodes($the_excerpt)); //Strips tags and images
             $words = explode(' ', $the_excerpt, $excerpt_length + 1);
@@ -604,11 +621,7 @@ if (!class_exists('tm_coschedule')) {
 			$posts = array();
 			foreach ($out as $post) {
 				$post = $this->get_full_post($post->ID);
-				if (!is_null($post['post_category'])) {
-					$post['post_category'] = implode($post['post_category'], ',');
-				} else {
-					$post['post_category'] = "";
-				}
+
 				array_push($posts, $post);
 			}
 			return $posts;
