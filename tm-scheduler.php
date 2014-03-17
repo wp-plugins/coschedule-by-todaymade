@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.11
+Version: 1.9.12
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.11";
-		private $build = 24;
+		private $version = "1.9.12";
+		private $build = 25;
 		private $connected = false;
 		private $token = false;
 
@@ -80,8 +80,9 @@ if (!class_exists('tm_coschedule')) {
         public function activation_redirect() {
             if (get_option('tm_coschedule_activation_redirect', false)) {
                 // Redirect to settings page
-                delete_option('tm_coschedule_activation_redirect');
-                wp_redirect('options-general.php?page=tm_coschedule');
+                if (delete_option('tm_coschedule_activation_redirect')) {
+                    wp_redirect('options-general.php?page=tm_coschedule');
+                }
             }
         }
 
@@ -374,59 +375,67 @@ if (!class_exists('tm_coschedule')) {
 		 * Ajax: Return blog info
 		 */
 		public function tm_aj_get_bloginfo() {
-            header('Content-Type: application/json');
+            try {
+                header('Content-Type: application/json');
+                $vars = array(
+                    "name"=>get_bloginfo("name"),
+                    "description"=>get_bloginfo("description"),
+                    "wpurl"=>get_bloginfo("wpurl"),
+                    "url"=>get_bloginfo("url"),
+                    "version"=>get_bloginfo("version"),
+                    "language"=>get_bloginfo("language"),
+                    "pingback_url"=>get_bloginfo("pingback_url"),
+                    "rss2_url"=>get_bloginfo("rss2_url"),
+                    "timezone_string"=>get_option("timezone_string"),
+                    "gmt_offset"=>get_option("gmt_offset"),
+                    "plugin_version"=>$this->version,
+                    "plugin_build"=>$this->build
+                );
 
-            $vars = array(
-                "name"=>get_bloginfo("name"),
-                "description"=>get_bloginfo("description"),
-                "wpurl"=>get_bloginfo("wpurl"),
-                "url"=>get_bloginfo("url"),
-                "version"=>get_bloginfo("version"),
-                "language"=>get_bloginfo("language"),
-                "pingback_url"=>get_bloginfo("pingback_url"),
-                "rss2_url"=>get_bloginfo("rss2_url"),
-                "timezone_string"=>get_option("timezone_string"),
-                "gmt_offset"=>get_option("gmt_offset"),
-                "plugin_version"=>$this->version,
-                "plugin_build"=>$this->build
-            );
+                if (isset($_GET['tm_debug'])) {
+                    $vars["debug"] = array();
+                    $vars["debug"]["server_time"] = time();
+                    $vars["debug"]["server_date"] = date('c');
+                    $vars["debug"]["site_url"] = get_option('siteurl');
+                    $vars["debug"]["php_version"] = phpversion();
 
-            if (isset($_GET['debug'])) {
-                $vars["debug"] = array();
-                $vars["debug"]["server_time"] = time();
-                $vars["debug"]["server_date"] = date('c');
-                $vars["debug"]["site_url"] = get_option('siteurl');
-                $vars["debug"]["php_version"] = phpversion();
+                    $theme = wp_get_theme();
+                    $vars["debug"]["theme"] = array();
+                    $vars["debug"]["theme"]["Name"] = $theme->get('Name');
+                    $vars["debug"]["theme"]["ThemeURI"] = $theme->get('ThemeURI');
+                    $vars["debug"]["theme"]["Description"] = $theme->get('Description');
+                    $vars["debug"]["theme"]["Author"] = $theme->get('Author');
+                    $vars["debug"]["theme"]["AuthorURI"] = $theme->get('AuthorURI');
+                    $vars["debug"]["theme"]["Version"] = $theme->get('Version');
+                    $vars["debug"]["theme"]["Template"] = $theme->get('Template');
+                    $vars["debug"]["theme"]["Status"] = $theme->get('Status');
+                    $vars["debug"]["theme"]["Tags"] = $theme->get('Tags');
+                    $vars["debug"]["theme"]["TextDomain"] = $theme->get('TextDomain');
+                    $vars["debug"]["theme"]["DomainPath"] = $theme->get('DomainPath');
 
-                $theme = wp_get_theme();
-                $vars["debug"]["theme"] = array();
-                $vars["debug"]["theme"]["Name"] = $theme->get('Name');
-                $vars["debug"]["theme"]["ThemeURI"] = $theme->get('ThemeURI');
-                $vars["debug"]["theme"]["Description"] = $theme->get('Description');
-                $vars["debug"]["theme"]["Author"] = $theme->get('Author');
-                $vars["debug"]["theme"]["AuthorURI"] = $theme->get('AuthorURI');
-                $vars["debug"]["theme"]["Version"] = $theme->get('Version');
-                $vars["debug"]["theme"]["Template"] = $theme->get('Template');
-                $vars["debug"]["theme"]["Status"] = $theme->get('Status');
-                $vars["debug"]["theme"]["Tags"] = $theme->get('Tags');
-                $vars["debug"]["theme"]["TextDomain"] = $theme->get('TextDomain');
-                $vars["debug"]["theme"]["DomainPath"] = $theme->get('DomainPath');
-
-                $vars["debug"]["plugins"] = $this->get_installed_plugins();
+                    $vars["debug"]["plugins"] = $this->get_installed_plugins();
+                }
+    			echo json_encode($this->array_decode_entities($vars));
+    			die();
+            } catch (Exception $e) {
+                header('Content-Type: text/plain');
+                echo 'Exception: ' . $e->getMessage();
             }
-
-			echo json_encode($this->array_decode_entities($vars));
-			die();
 		}
 
 		/**
 		 * Ajax: Return full post with permalink
 		 */
 		public function tm_aj_get_full_post() {
-            header('Content-Type: application/json');
-
-			echo json_encode($this->get_full_post($_GET['post_id']));
-			die();
+            try {
+                header('Content-Type: application/json');
+    			echo json_encode($this->get_full_post($_GET['post_id']));
+    			die();
+            } catch (Exception $e) {
+                header('Content-Type: text/plain');
+                echo 'Exception: ' . $e->getMessage();
+            }
+            die();
 		}
 
 		/**
@@ -435,14 +444,18 @@ if (!class_exists('tm_coschedule')) {
 		public function tm_aj_set_token() {
             header('Content-Type: text/plain');
 
-            if (isset($_POST['token'])) {
-    			update_option('tm_coschedule_token', $_POST['token']);
-    			update_option('tm_coschedule_id', $_POST['id']);
-    			echo $_POST['token'];
-            } else if (isset($_GET['token'])) {
-                update_option('tm_coschedule_token', $_GET['token']);
-                update_option('tm_coschedule_id', $_GET['id']);
-                echo $_GET['token'];
+            try {
+                if (isset($_POST['token'])) {
+        			update_option('tm_coschedule_token', $_POST['token']);
+        			update_option('tm_coschedule_id', $_POST['id']);
+        			echo $_POST['token'];
+                } else if (isset($_GET['token'])) {
+                    update_option('tm_coschedule_token', $_GET['token']);
+                    update_option('tm_coschedule_id', $_GET['id']);
+                    echo $_GET['token'];
+                }
+            } catch (Exception $e) {
+                echo 'Exception: ' . $e->getMessage();
             }
 			die();
 		}
@@ -453,23 +466,27 @@ if (!class_exists('tm_coschedule')) {
         public function tm_aj_check_token() {
             header('Content-Type: text/plain');
 
-            // Check request token
-            if (!isset($_GET['token']) || empty($_GET['token'])) {
-                echo 'Token not provided in request';
-                die();
-            }
+            try {
+                // Check request token
+                if (!isset($_GET['token']) || empty($_GET['token'])) {
+                    echo 'Token not provided in request';
+                    die();
+                }
 
-            // Check stored token
-            if (!isset($this->token) || empty($this->token)) {
-                echo 'No token saved in WordPress';
-                die();
-            }
+                // Check stored token
+                if (!isset($this->token) || empty($this->token)) {
+                    echo 'No token saved in WordPress';
+                    die();
+                }
 
-            // Compare
-            if ($_GET['token'] == $this->token) {
-                echo "Tokens match";
-            } else {
-                echo "Tokens do not match";
+                // Compare
+                if ($_GET['token'] == $this->token) {
+                    echo "Tokens match";
+                } else {
+                    echo "Tokens do not match";
+                }
+            } catch (Exception $e) {
+                echo 'Exception: ' . $e->getMessage();
             }
             die();
         }
@@ -480,8 +497,12 @@ if (!class_exists('tm_coschedule')) {
         public function tm_aj_set_custom_post_types() {
             header('Content-Type: text/plain');
 
-            echo $_GET['post_types_list'];
-            update_option('tm_coschedule_custom_post_types_list', $_GET['post_types_list']);
+            try {
+                echo $_GET['post_types_list'];
+                update_option('tm_coschedule_custom_post_types_list', $_GET['post_types_list']);
+            } catch (Exception $e) {
+                echo 'Exception: ' . $e->getMessage();
+            }
             die();
         }
 
@@ -489,47 +510,52 @@ if (!class_exists('tm_coschedule')) {
 		 * Ajax: Get function
 		 */
 		public function tm_aj_function() {
-			// Validate call
-			$this->valid_token($_GET['token']);
+            header('Content-Type: text/plain');
 
-			// Save args
-			$args = $_GET;
+            try {
+                // Validate call
+                $this->valid_token($_GET['token']);
 
-			// Remove action name
-			unset($args['action']);
+                // Save args
+                $args = $_GET;
 
-			// Remove token
-			unset($args['token']);
+                // Remove action name
+                unset($args['action']);
 
-			// Save and remove function name
-			$func = $args['call'];
-			unset($args['call']);
+                // Remove token
+                unset($args['token']);
 
-            // Fix: Prevent WP from stripping iframe tags when updating post
-            if ($func === "wp_update_post") {
-                remove_filter('content_save_pre', 'wp_filter_post_kses');
+                // Save and remove function name
+                $func = $args['call'];
+                unset($args['call']);
+
+                // Fix: Prevent WP from stripping iframe tags when updating post
+                if ($func === "wp_update_post") {
+                    remove_filter('content_save_pre', 'wp_filter_post_kses');
+                }
+
+                // Call public or private Function
+                if (isset($args['private'])) {
+                    unset($args['private']);
+                    $out = call_user_func_array(array($this, $func), $args);
+                } else {
+                    $out = call_user_func_array($func, $args);
+                }
+
+                if (is_array($out)) {
+                    header('Content-Type: application/json');
+                    echo json_encode($out);
+                } else {
+                    // Check for errors
+                    if (is_wp_error($out) ) {
+                        echo $out->get_error_message();
+                    } else {
+                        echo $out;
+                    }
+                }
+            } catch (Exception $e) {
+                echo 'Exception: ' . $e->getMessage();
             }
-
-			// Call public or private Function
-			if (isset($args['private'])) {
-				unset($args['private']);
-				$out = call_user_func_array(array($this, $func), $args);
-			} else {
-				$out = call_user_func_array($func, $args);
-			}
-
-			if (is_array($out)) {
-                header('Content-Type: application/json');
-				echo json_encode($out);
-			} else {
-                header('Content-Type: text/plain');
-				// Check for errors
-				if (is_wp_error($out) ) {
-					echo $out->get_error_message();
-				} else {
-					echo $out;
-				}
-			}
 			die();
 		}
 
@@ -538,11 +564,17 @@ if (!class_exists('tm_coschedule')) {
 		 */
 		public function tm_aj_deactivation() {
             header('Content-Type: text/plain');
-			// Validate call
-			$this->valid_token($_GET['token']);
 
-			delete_option('tm_coschedule_token');
-			delete_option('tm_coschedule_id');
+            try {
+                // Validate call
+                $this->valid_token($_GET['token']);
+
+                delete_option('tm_coschedule_token');
+                delete_option('tm_coschedule_id');
+            } catch (Exception $e) {
+                header('Content-Type: text/plain');
+                echo 'Exception: ' . $e->getMessage();
+            }
 			die();
 		}
 

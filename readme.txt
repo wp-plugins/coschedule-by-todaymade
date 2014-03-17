@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 3.8.1
-Stable tag: 1.9.11
+Stable tag: 1.9.12
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,6 +126,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 1.9.12 =
+* Improves debugging and fixes variable collisions
+
 = 1.9.11 =
 * Performance improvements for post syncing
 
@@ -189,6 +192,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 1.9.12 =
+* This update improves debugging and fixes variable collisions
 
 = 1.9.11 =
 * This update adds performance improvements for post syncing
