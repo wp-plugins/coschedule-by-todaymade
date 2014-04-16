@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.13
+Version: 1.9.14
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,8 +22,8 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
 		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.13";
-		private $build = 26;
+		private $version = "1.9.14";
+		private $build = 27;
 		private $connected = false;
 		private $token = false;
 
@@ -586,19 +586,18 @@ if (!class_exists('tm_coschedule')) {
 			$post = get_post($post_id, "ARRAY_A");
 			$post['permalink'] = get_permalink($post_id);
 
-            // Media attachments
+            // Media attachments (start with featured image)
             $post['attachments'] = array();
             $featured_image = $this->get_thumbnail($post_id);
             if ($featured_image) {
                 array_push($post['attachments'], $featured_image);
             }
 
-            // Merge and remove attachment duplicates
-            $post['attachments'] = array_merge($post['attachments'], $this->get_attachments($post_id));
-            $post['attachments'] = array_unique($post['attachments']);
-
-            // Fill except and remove content
             if (isset($post['post_content'])) {
+                // Add post attachments and remove duplicates
+                $post['attachments'] = array_merge($post['attachments'], $this->get_attachments($post['post_content']));
+                $post['attachments'] = array_unique($post['attachments']);
+
                 // Generate an excerpt if one isn't available
                 if (!isset($post['post_excerpt']) || (isset($post['post_excerpt']) && empty($post['post_excerpt']))) {
                     $post['post_excerpt'] = $this->get_post_excerpt($post['post_content']);
@@ -689,32 +688,17 @@ if (!class_exists('tm_coschedule')) {
         /**
          * Get array of all attachments of the post
          */
-        public function get_attachments($post_id) {
+        public function get_attachments($content) {
             $attachments = array();
-            $site_url = get_site_url();
 
-            // remove trailing slash from site url
-            if(substr($site_url, -1) == '/') {
-                $site_url = substr($site_url, 0, -1);
-            }
+            preg_match_all('/<img[^>]+>/i',$content, $images);
 
-            // Get all images of the post
-            $images =& get_children('post_type=attachment&post_mime_type=image&output=ARRAY_N&orderby=menu_order&order=ASC&post_parent='.$post_id);
+            for ($i = 0; $i < count($images[0]); $i++) {
+                // get the source string
+                preg_match('/src="([^"]+)/i',$images[0][$i], $img);
 
-            // Loop through images to get URLs
-            if($images){
-                foreach($images as $image_id => $image_post){
-                    $image_url = wp_get_attachment_url($image_id);
-
-                    // Only include valid URLs
-                    if (is_string($image_url)) {
-                        // Older versions of WordPress (<3.6) may exclude site URL from attachment URL
-                        if (strpos($image_url, 'http') === FALSE) {
-                            $image_url = $site_url . $image_url;
-                        }
-                        array_push($attachments, $image_url);
-                    }
-                }
+                // remove opening 'src=' tag, can`t get the regex right
+                $attachments[] = str_ireplace( 'src="', '',  $img[0]);
             }
 
             return $attachments;
