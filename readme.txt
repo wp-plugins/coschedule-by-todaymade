@@ -3,8 +3,8 @@ Contributors: todaymade
 Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
-Tested up to: 3.8.1
-Stable tag: 1.9.14
+Tested up to: 3.9
+Stable tag: 1.9.15
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,6 +126,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 1.9.15 =
+* Improves reliability of post-message associations
+
 = 1.9.14 =
 * Improves reliability of image attachments for posts
 
@@ -198,6 +201,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 1.9.15 =
+* This update improves reliability of post-message associations
 
 = 1.9.14 =
 * This update improves reliability of image attachments for posts

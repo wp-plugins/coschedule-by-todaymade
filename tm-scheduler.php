@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.14
+Version: 1.9.15
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -21,9 +21,9 @@ if (!class_exists('tm_coschedule')) {
 	 */
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
-		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.14";
-		private $build = 27;
+		private $assets = "https://d28i93e1y9m4f5.cloudfront.net";
+		private $version = "1.9.15";
+		private $build = 28;
 		private $connected = false;
 		private $token = false;
 
@@ -241,13 +241,13 @@ if (!class_exists('tm_coschedule')) {
 		/**
 		 * Registers the javascript variables for the page
 		 */
-		public function plugin_js_variables() {
+		public function plugin_js_variables($post) {
 			return array(
 				'build' => $this->build,
 				'version' => $this->version,
-				'post_id' => get_the_ID(),
+				'post_id' => $post->ID,
 				'token' => get_option('tm_coschedule_token'),
-				'post' => $this->get_full_post(get_the_ID())
+				'post' => $this->get_full_post($post->ID)
 			);
 		}
 
@@ -334,11 +334,11 @@ if (!class_exists('tm_coschedule')) {
 		/**
 		 * Inserts the meta box
 		 */
-		public function meta_box_insert() {
+		public function meta_box_insert($post) {
 			echo '
 			<div id="tm-coschedule-outlet"></div>
 			<script>
-				var tm_coschedule_variables = '. json_encode($this->plugin_js_variables()) .';
+				var tm_coschedule_variables = '. json_encode($this->plugin_js_variables($post)) .';
 			</script>
 			';
 		}
@@ -818,7 +818,7 @@ if (!class_exists('tm_coschedule')) {
 		 * Returns: Number from text file
 		 */
 		public function get_cache_bust() {
-			$location = 'https://d27i93e1y9m4f5.cloudfront.net/plugin/cache_bust.txt';
+			$location = 'https://d28i93e1y9m4f5.cloudfront.net/plugin/cache_bust.txt';
 			$request = new WP_Http;
 			$result = $request->request($location);
 			if (is_array($result) && isset($result['body'])) {
