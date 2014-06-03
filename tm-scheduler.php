@@ -210,9 +210,9 @@ if (!class_exists('tm_coschedule')) {
 
             if (get_option('tm_coschedule_id')) {
                 $id = get_option('tm_coschedule_id');
-                $submenu['tm_coschedule_calendar'][500] = array('<div class="cos-submenu-new-window">Open In Web App</div>', 'edit_posts', $this->app . '/#/blog/' . $id . '/schedule' );
+                $submenu['tm_coschedule_calendar'][500] = array('<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', $this->app . '/#/blog/' . $id . '/schedule' );
             } else {
-                $submenu['tm_coschedule_calendar'][500] = array('<div class="cos-submenu-new-window">Open In Web App</div>', 'edit_posts', $this->app );
+                $submenu['tm_coschedule_calendar'][500] = array('<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', $this->app );
             }
         }
 
