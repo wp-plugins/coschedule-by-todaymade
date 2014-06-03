@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 1.9.16
+Version: 2.0.0
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -21,9 +21,11 @@ if (!class_exists('tm_coschedule')) {
 	 */
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
-		private $assets = "https://d27i93e1y9m4f5.cloudfront.net";
-		private $version = "1.9.16";
-		private $build = 29;
+        private $app = "https://app.coschedule.com";
+        private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
+		private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
+		private $version = "2.0.0";
+		private $build = 30;
 		private $connected = false;
 		private $token = false;
 
@@ -81,7 +83,7 @@ if (!class_exists('tm_coschedule')) {
             if (get_option('tm_coschedule_activation_redirect', false)) {
                 // Redirect to settings page
                 if (delete_option('tm_coschedule_activation_redirect')) {
-                    wp_redirect('options-general.php?page=tm_coschedule');
+                    wp_redirect('admin.php?page=tm_coschedule_calendar');
                 }
             }
         }
@@ -168,8 +170,11 @@ if (!class_exists('tm_coschedule')) {
 			add_action('wp_ajax_tm_aj_deactivation', array($this, 'tm_aj_deactivation'));
 			add_action('wp_ajax_nopriv_tm_aj_deactivation', array($this, 'tm_aj_deactivation'));
 
-			// Add Sidebar Settings Link
+			// Add Sidebar Links
 			add_action('admin_menu', array($this, 'add_menu'));
+            add_action('admin_menu', array($this, 'add_submenu'));
+            add_action('admin_menu', array($this, 'admin_submenu_new_window_items'));
+            add_action('admin_menu', array($this, 'admin_submenu_new_window_items_jquery'));
 
 			// Add settings link to plugins listing page
 			add_filter('plugin_action_links', array($this, 'plugin_settings_link'), 2, 2);
@@ -179,43 +184,64 @@ if (!class_exists('tm_coschedule')) {
 		}
 
 		/**
-		* Add calendar and settings link to the admin menu
-		*/
+		 * Add calendar and settings link to the admin menu
+		 */
 		public function add_menu() {
-			// Settings Page
-			$settings_1 = add_options_page('CoSchedule Settings', 'CoSchedule', 'manage_options', 'tm_coschedule', array($this, 'plugin_settings_page'));
-			// Enqueue scripts for settings
-			add_action('admin_print_styles-' . $settings_1, array($this, 'plugin_settings_scripts'));
+            add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_calendar_page'), $this->assets.'/plugin/img/icon.png', '50.505' );
+        }
 
-			// Switch main nav link between settings and the calendar depending on if they are connected
-			if ($this->connected) {
-				add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_calendar_page'), $this->assets.'/plugin/icon.png', '50.505' );
-			} else {
-				$settings_2 = add_menu_page('CoSchedule Calendar', 'Calendar', 'edit_posts', 'tm_coschedule_calendar', array($this, 'plugin_settings_page'), $this->assets.'/plugin/icon.png', '50.505' );
-				// Enqueue scripts for settings
-				add_action('admin_print_styles-' . $settings_2, array($this, 'plugin_settings_scripts'));
-			}
-		}
+        /**
+         * Add calendar submenu links to admin menu.
+         */
+        public function add_submenu() {
+            if ($this->connected) {
+                add_submenu_page('tm_coschedule_calendar', 'My Activity', 'My Activity', 'edit_posts', 'tm_coschedule_activity', array($this, 'plugin_activity_page'));
+                add_submenu_page('tm_coschedule_calendar', 'My Team', 'My Team', 'edit_posts', 'tm_coschedule_team', array($this, 'plugin_team_page'));
+                add_submenu_page('tm_coschedule_calendar', 'Settings', 'Settings', 'edit_posts', 'tm_coschedule_settings', array($this, 'plugin_settings_page'));
+                add_submenu_page('tm_coschedule_calendar', 'Need Help?', 'Need Help?', 'edit_posts', 'tm_coschedule_help', array($this, 'plugin_help_page'));
+            }
+        }
+
+        /**
+         * Add submenu item(s) that open in new window
+         */
+        public function admin_submenu_new_window_items() {
+            global $submenu;
+
+            if (get_option('tm_coschedule_id')) {
+                $id = get_option('tm_coschedule_id');
+                $submenu['tm_coschedule_calendar'][500] = array('<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', $this->app . '/#/blog/' . $id . '/schedule' );
+            } else {
+                $submenu['tm_coschedule_calendar'][500] = array('<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', $this->app );
+            }
+        }
+
+        /**
+         * Enqueue script for opening submenu links in new window
+         */
+        public function admin_submenu_new_window_items_jquery() {
+            $cache_bust = $this->get_cache_bust();
+            wp_enqueue_script('cos_js_plugin_new_window', $this->assets.'/plugin/js/cos-plugin-new-window.js?cb='.$cache_bust, false, null, true);
+        }
 
 		/**
 		 * Admin: Add settings link to plugin management page
 		 */
 		public function plugin_settings_link($actions, $file) {
 			if(false !== strpos($file, 'tm-scheduler')) {
-				$actions['settings'] = '<a href="options-general.php?page=tm_coschedule">Settings</a>';
+				$actions['settings'] = '<a href="admin.php?page=tm_coschedule_calendar">Settings</a>';
 			}
 			return $actions;
 		}
 
-		/**
-		* Setttings page menu callback
-		*/
-		public function plugin_settings_page() {
-			if(!current_user_can('manage_options')) {
-				wp_die(__('You do not have sufficient permissions to access this page.'));
-			}
-			include(sprintf("%s/settings.php", dirname(__FILE__)));
-		}
+        /**
+        * Settings page styles
+        */
+        public function plugin_iframe_styles() {
+            $cache_bust = $this->get_cache_bust();
+
+            wp_enqueue_style('cos_css', $this->assets.'/plugin/css/cos-iframe-fix.css?cb='.$cache_bust);
+        }
 
 		/**
 		* Settings page scripts
@@ -223,20 +249,92 @@ if (!class_exists('tm_coschedule')) {
 		public function plugin_settings_scripts() {
 			$cache_bust = $this->get_cache_bust();
 
-			wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.min.css?cb='.$cache_bust);
-			wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
-			wp_enqueue_script('cos_js_plugin', $this->assets.'/js/settings.js?cb='.$cache_bust, false, null, true);
+            wp_enqueue_style('cos_css', $this->assets.'/plugin/css/cos-plugin-setup.css?cb='.$cache_bust);
+			wp_enqueue_script('cos_js_config', $this->assets.'/config.js?cb='.$cache_bust, false, null, true);
+			wp_enqueue_script('cos_js_plugin', $this->assets.'/plugin/js/cos-plugin-setup.js?cb='.$cache_bust, false, null, true);
 		}
 
 		/**
-		* Calendar page menu callback
-		*/
+		 * Calendar page menu callback
+		 */
 		public function plugin_calendar_page() {
 			if(!current_user_can('edit_posts')) {
 				wp_die(__('You do not have sufficient permissions to access this page.'));
 			}
-			include(sprintf("%s/calendar.php", dirname(__FILE__)));
+
+            // Check if connected
+            if ($this->connected) {
+                $this->plugin_iframe_styles();
+                include(sprintf("%s/calendar.php", dirname(__FILE__)));
+            } else {
+                $this->plugin_settings_scripts();
+                include(sprintf("%s/plugin_setup.php", dirname(__FILE__)));
+            }
 		}
+
+        /**
+         * Team page menu callback
+         */
+        public function plugin_team_page() {
+            if(!current_user_can('edit_posts')) {
+                wp_die(__('You do not have sufficient permissions to access this page.'));
+            }
+
+            // Setup styles
+            if (current_user_can('manage_options')) {
+                $this->plugin_iframe_styles();
+            } else {
+                $this->plugin_settings_scripts();
+            }
+
+            include(sprintf("%s/team.php", dirname(__FILE__)));
+        }
+
+        /**
+         * Activity page menu callback
+         */
+        public function plugin_activity_page() {
+            if(!current_user_can('edit_posts')) {
+                wp_die(__('You do not have sufficient permissions to access this page.'));
+            }
+
+            // Setup styles
+            $this->plugin_iframe_styles();
+
+            include(sprintf("%s/activity.php", dirname(__FILE__)));
+        }
+
+        /**
+         * Settings page menu callback
+         */
+        public function plugin_settings_page() {
+            if(!current_user_can('edit_posts')) {
+                wp_die(__('You do not have sufficient permissions to access this page.'));
+            }
+
+            // Setup styles
+            if (current_user_can('manage_options')) {
+                $this->plugin_iframe_styles();
+            } else {
+                $this->plugin_settings_scripts();
+            }
+
+            include(sprintf("%s/settings.php", dirname(__FILE__)));
+        }
+
+        /**
+         * Help page menu callback
+         */
+        public function plugin_help_page() {
+            if(!current_user_can('edit_posts')) {
+                wp_die(__('You do not have sufficient permissions to access this page.'));
+            }
+
+            // Setup styles
+            $this->plugin_iframe_styles();
+
+            include(sprintf("%s/help.php", dirname(__FILE__)));
+        }
 
 		/**
 		 * Registers the javascript variables for the page
@@ -306,9 +404,9 @@ if (!class_exists('tm_coschedule')) {
             $enabled = $this->meta_box_enabled();
             if ($enabled) {
                 $cache_bust = $this->get_cache_bust();
-				wp_enqueue_style('cos_css', $this->assets.'/css/wordpress_plugin.css?cb='.$cache_bust);
-				wp_enqueue_script('cos_js_config', $this->assets.'/js/config.js?cb='.$cache_bust, false, null, true);
-				wp_enqueue_script('cos_js_plugin', $this->assets.'/js/plugin.js?cb='.$cache_bust, false, null, true);
+				wp_enqueue_style('cos_css', $this->plugin_remote.'/css/wordpress_plugin.css?cb='.$cache_bust);
+				wp_enqueue_script('cos_js_config', $this->plugin_remote.'/js/config.js?cb='.$cache_bust, false, null, true);
+				wp_enqueue_script('cos_js_plugin', $this->plugin_remote.'/js/plugin.js?cb='.$cache_bust, false, null, true);
                 wp_enqueue_script('cos_js_transloadit', 'http://assets.transloadit.com/js/jquery.transloadit2-latest.js', false, null, true);
 			}
 		}
@@ -428,9 +526,10 @@ if (!class_exists('tm_coschedule')) {
 		 */
 		public function tm_aj_get_full_post() {
             try {
+                $id = $this->sanitize_param($_GET['post_id']);
+
                 header('Content-Type: application/json');
-    			echo json_encode($this->get_full_post($_GET['post_id']));
-    			die();
+    			echo json_encode($this->get_full_post($id));
             } catch (Exception $e) {
                 header('Content-Type: text/plain');
                 echo 'Exception: ' . $e->getMessage();
@@ -445,14 +544,20 @@ if (!class_exists('tm_coschedule')) {
             header('Content-Type: text/plain');
 
             try {
-                if (isset($_POST['token'])) {
-        			update_option('tm_coschedule_token', $_POST['token']);
-        			update_option('tm_coschedule_id', $_POST['id']);
-        			echo $_POST['token'];
-                } else if (isset($_GET['token'])) {
-                    update_option('tm_coschedule_token', $_GET['token']);
-                    update_option('tm_coschedule_id', $_GET['id']);
-                    echo $_GET['token'];
+                // Sanitize $_POST or $_GET params
+                if (isset($_POST['token']) && isset($_POST['id'])) {
+                    $params = $this->sanitize_param_array($_POST);
+                } elseif (isset($_GET['token']) && isset($_GET['id'])) {
+                    $params = $this->sanitize_param_array($_GET);
+                } else {
+                    $params = array();
+                }
+
+                // Set options
+                if (isset($params['token']) && isset($params['id'])) {
+        			update_option('tm_coschedule_token', $params['token']);
+        			update_option('tm_coschedule_id', $params['id']);
+        			echo $params['token'];
                 }
             } catch (Exception $e) {
                 echo 'Exception: ' . $e->getMessage();
@@ -467,20 +572,10 @@ if (!class_exists('tm_coschedule')) {
             header('Content-Type: text/plain');
 
             try {
-                // Check request token
-                if (!isset($_GET['token']) || empty($_GET['token'])) {
-                    echo 'Token not provided in request';
-                    die();
-                }
-
-                // Check stored token
-                if (!isset($this->token) || empty($this->token)) {
-                    echo 'No token saved in WordPress';
-                    die();
-                }
+                $token = $this->sanitize_param($_GET['token']);
 
                 // Compare
-                if ($_GET['token'] == $this->token) {
+                if ($this->valid_token($token)) {
                     echo "Tokens match";
                 } else {
                     echo "Tokens do not match";
@@ -498,8 +593,9 @@ if (!class_exists('tm_coschedule')) {
             header('Content-Type: text/plain');
 
             try {
-                echo $_GET['post_types_list'];
-                update_option('tm_coschedule_custom_post_types_list', $_GET['post_types_list']);
+                $list = $this->sanitize_param($_GET['post_types_list']);
+                echo $list;
+                update_option('tm_coschedule_custom_post_types_list', $list);
             } catch (Exception $e) {
                 echo 'Exception: ' . $e->getMessage();
             }
@@ -513,11 +609,11 @@ if (!class_exists('tm_coschedule')) {
             header('Content-Type: text/plain');
 
             try {
-                // Validate call
-                $this->valid_token($_GET['token']);
-
                 // Save args
-                $args = $_GET;
+                $args = $this->sanitize_param_array($_GET);
+
+                // Validate call
+                $this->valid_token($args['token']);
 
                 // Remove action name
                 unset($args['action']);
@@ -528,6 +624,20 @@ if (!class_exists('tm_coschedule')) {
                 // Save and remove function name
                 $func = $args['call'];
                 unset($args['call']);
+
+                // Check if function is allowed
+                $allowed = array(
+                    'get_users',
+                    'get_categories',
+                    'get_posts_with_categories',
+                    'get_post_types',
+                    'wp_update_post',
+                    'wp_insert_post'
+                );
+
+                if (!in_array($func, $allowed)) {
+                    throw new Exception('Invalid function called');
+                }
 
                 // Fix: Prevent WP from stripping iframe tags when updating post
                 if ($func === "wp_update_post") {
@@ -568,7 +678,8 @@ if (!class_exists('tm_coschedule')) {
 
             try {
                 // Validate call
-                $this->valid_token($_GET['token']);
+                $token = $this->sanitize_param($_GET['token']);
+                $this->valid_token($token);
 
                 delete_option('tm_coschedule_token');
                 delete_option('tm_coschedule_id');
@@ -800,8 +911,8 @@ if (!class_exists('tm_coschedule')) {
 		 * Returns: Result of call
 		 */
 		public function api_post($url, $body) {
-			$request = new WP_Http;
-			return $request->request($this->api.$url, array('method' => 'POST', 'body' => $this->array_decode_entities($body)));
+			$http = new WP_Http;
+			return $http->request($this->api.$url, array('method' => 'POST', 'body' => $this->array_decode_entities($body)));
 		}
 
 		/**
@@ -809,8 +920,8 @@ if (!class_exists('tm_coschedule')) {
 		 * Returns: Result of call
 		 */
 		public function api_get($url) {
-			$request = new WP_Http;
-			return $request->request($this->api.$url);
+			$http = new WP_Http;
+			return $http->request($this->api.$url);
 		}
 
 		/**
@@ -818,9 +929,9 @@ if (!class_exists('tm_coschedule')) {
 		 * Returns: Number from text file
 		 */
 		public function get_cache_bust() {
-			$location = 'https://d27i93e1y9m4f5.cloudfront.net/plugin/cache_bust.txt';
-			$request = new WP_Http;
-			$result = $request->request($location);
+			$location = $this->assets . '/plugin/cache_bust.txt';
+			$http = new WP_Http;
+			$result = $http->request($location);
 			if (is_array($result) && isset($result['body'])) {
 				return $result['body'];
 			}
@@ -893,6 +1004,33 @@ if (!class_exists('tm_coschedule')) {
 			//we do not know the post type!
 			return null;
 		}
+
+        /**
+         * Helper function to sanitize an array of params
+         */
+        public function sanitize_param_array($params = array()) {
+            if (!is_array($params)) {
+                return $params;
+            }
+
+            foreach ($params as $key => $value) {
+                $params[$key] = $this->sanitize_param($value);
+            }
+
+            return $params;
+        }
+
+        /**
+         * Helper function to sanitize param string
+         */
+        public function sanitize_param($param = '') {
+            if (is_string($param)) {
+                $param = mysql_real_escape_string($param);
+                $param = htmlspecialchars($param);
+            }
+
+            return $param;
+        }
 	} // End tm_coschedule class
 
 	// Init Class

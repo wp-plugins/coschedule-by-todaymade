@@ -1,8 +1,8 @@
 <?php
 if (get_option('tm_coschedule_token')) {
-    if (current_user_can('manage_options')) {
+    if (current_user_can('edit_posts')) {
 ?>
-    <iframe id="CoSiFrame" frameborder=0 border=0 src="https://dgp49e2avkx9v.cloudfront.net/#/<?php echo get_option('tm_coschedule_token'); ?>/<?php echo get_current_user_id(); ?>/0/settings" width="100%"></iframe>
+    <iframe id="CoSiFrame" frameborder=0 border=0 src="https://dgp49e2avkx9v.cloudfront.net/#/<?php echo get_option('tm_coschedule_token'); ?>/<?php echo get_current_user_id(); ?>/0/dashboard" width="100%"></iframe>
 
     <script>
         jQuery(document).ready(function($) {

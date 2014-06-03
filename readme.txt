@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 3.9
-Stable tag: 1.9.16
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,8 +126,8 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
-= 1.9.16 =
-* Fixes the bug with loading the plugin metabox
+= 2.0.0 =
+* Changes the plugin interface, adds security improvements, and improves calendar functionality in WordPress
 
 = 1.9.15 =
 * Improves reliability of post-message associations
@@ -205,8 +205,8 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Upgrade Notice ==
 
-= 1.9.16 =
-* This update fixes the bug with loading the plugin metabox
+= 2.0.0 =
+* This update changes the plugin interface, adds security improvements, and improves calendar functionality in WordPress
 
 = 1.9.15 =
 * This update improves reliability of post-message associations
