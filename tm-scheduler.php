@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.0.0
+Version: 2.0.1
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -24,8 +24,8 @@ if (!class_exists('tm_coschedule')) {
         private $app = "https://app.coschedule.com";
         private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
 		private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-		private $version = "2.0.0";
-		private $build = 30;
+		private $version = "2.0.1";
+		private $build = 31;
 		private $connected = false;
 		private $token = false;
 
@@ -208,11 +208,15 @@ if (!class_exists('tm_coschedule')) {
         public function admin_submenu_new_window_items() {
             global $submenu;
 
-            if (get_option('tm_coschedule_id')) {
-                $id = get_option('tm_coschedule_id');
-                $submenu['tm_coschedule_calendar'][500] = array('<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', $this->app . '/#/blog/' . $id . '/schedule' );
-            } else {
-                $submenu['tm_coschedule_calendar'][500] = array('<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', $this->app );
+            if (get_option('tm_coschedule_token')) {
+                $url = $this->app;
+
+                if (get_option('tm_coschedule_id')) {
+                    $id = get_option('tm_coschedule_id');
+                    $url .= '/#/blog/' . $id . '/schedule';
+                }
+
+                $submenu['tm_coschedule_calendar'][500] = array('<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', $url);
             }
         }
 
@@ -1025,8 +1029,8 @@ if (!class_exists('tm_coschedule')) {
          */
         public function sanitize_param($param = '') {
             if (is_string($param)) {
-                $param = mysql_real_escape_string($param);
-                $param = htmlspecialchars($param);
+                $param = esc_sql($param);
+                $param = esc_html($param);
             }
 
             return $param;

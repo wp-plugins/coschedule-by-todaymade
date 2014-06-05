@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 3.9
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,6 +126,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 2.0.1 =
+* Fixes the CoSchedule submenu and bugs affecting non-MySQL blogs
+
 = 2.0.0 =
 * Changes the plugin interface, adds security improvements, and improves calendar functionality in WordPress
 
@@ -204,6 +207,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.0.1 =
+* This update fixes the CoSchedule submenu and bugs affecting non-MySQL blogs
 
 = 2.0.0 =
 * This update changes the plugin interface, adds security improvements, and improves calendar functionality in WordPress
