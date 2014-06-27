@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.0.1
+Version: 2.1.0
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,10 +22,11 @@ if (!class_exists('tm_coschedule')) {
 	class tm_coschedule  {
 		private $api = "https://api.coschedule.com";
         private $app = "https://app.coschedule.com";
+        private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
         private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
 		private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-		private $version = "2.0.1";
-		private $build = 31;
+		private $version = "2.1.0";
+		private $build = 32;
 		private $connected = false;
 		private $token = false;
 
@@ -126,6 +127,10 @@ if (!class_exists('tm_coschedule')) {
 			add_action( 'profile_update', array($this, "save_user_callback"));
 			add_action( 'delete_user', array($this, "delete_user_callback"));
 
+            // Called whenever timezone is updated
+            add_action( 'update_option_timezone_string', array( $this, "save_timezone_callback" ) );
+            add_action( 'update_option_gmt_offset', array( $this, "save_timezone_callback" ) );
+
 			// Edit Flow Fix
 			add_filter('wp_insert_post_data', array($this, 'fix_custom_status_timestamp_before'), 1);
 			add_filter('wp_insert_post_data', array($this, 'fix_custom_status_timestamp_after'), 20);
@@ -138,10 +143,6 @@ if (!class_exists('tm_coschedule')) {
 			// Add meta box setup actions to post edit screen
 			add_action('load-post.php', array($this, "meta_box_action"));
 			add_action('load-post-new.php', array($this, "meta_box_action"));
-
-			// Add meta box css and script to post edit screen
-			add_action('load-post.php', array($this, "meta_box_scripts"));
-			add_action('load-post-new.php', array($this, "meta_box_scripts"));
 
 			// Ajax: Get blog info
 			add_action('wp_ajax_tm_aj_get_bloginfo', array($this, 'tm_aj_get_bloginfo'));
@@ -340,19 +341,6 @@ if (!class_exists('tm_coschedule')) {
             include(sprintf("%s/help.php", dirname(__FILE__)));
         }
 
-		/**
-		 * Registers the javascript variables for the page
-		 */
-		public function plugin_js_variables($post) {
-			return array(
-				'build' => $this->build,
-				'version' => $this->version,
-				'post_id' => $post->ID,
-				'token' => get_option('tm_coschedule_token'),
-				'post' => $this->get_full_post($post->ID)
-			);
-		}
-
         /**
          * Checks if the meta box should be included on the page based on post type
          */
@@ -402,25 +390,15 @@ if (!class_exists('tm_coschedule')) {
 		}
 
 		/**
-		 * Enqueue the css and js for the metabox
-		 */
-		public function meta_box_scripts() {
-            $enabled = $this->meta_box_enabled();
-            if ($enabled) {
-                $cache_bust = $this->get_cache_bust();
-				wp_enqueue_style('cos_css', $this->plugin_remote.'/css/wordpress_plugin.css?cb='.$cache_bust);
-				wp_enqueue_script('cos_js_config', $this->plugin_remote.'/js/config.js?cb='.$cache_bust, false, null, true);
-				wp_enqueue_script('cos_js_plugin', $this->plugin_remote.'/js/plugin.js?cb='.$cache_bust, false, null, true);
-                wp_enqueue_script('cos_js_transloadit', 'http://assets.transloadit.com/js/jquery.transloadit2-latest.js', false, null, true);
-			}
-		}
-
-		/**
 		 * Sets up the meta box to be inserted
 		 */
 		public function meta_box_setup() {
             $enabled = $this->meta_box_enabled();
             if ($enabled) {
+                $this->metabox_iframe_styles();
+                $this->metabox_iframe_scripts();
+
+
                 $post_type = $this->get_current_post_type();
     			add_meta_box(
     				'tm-scheduler',						    // Unique ID
@@ -433,16 +411,32 @@ if (!class_exists('tm_coschedule')) {
             }
 		}
 
+        /**
+        * Metabox iframe styles
+        */
+        public function metabox_iframe_styles() {
+            $cache_bust = $this->get_cache_bust();
+            wp_enqueue_style('cos_metabox_css', $this->assets.'/plugin/css/cos-metabox.css?cb='.$cache_bust);
+        }
+
+        /**
+        * Metabox iframe scripts
+        */
+        public function metabox_iframe_scripts() {
+            $cache_bust = $this->get_cache_bust();
+            wp_enqueue_script('cos_js_iframe_resizer', $this->assets.'/plugin/js/cos-iframe-resizer.js?cb='.$cache_bust, false, null, true);
+            wp_enqueue_script('cos_js_iframe_resizer_exec', $this->assets.'/plugin/js/cos-iframe-resizer-exec.js?cb='.$cache_bust, false, null, true);
+        }
+
+        /*
+
 		/**
 		 * Inserts the meta box
 		 */
 		public function meta_box_insert($post) {
-			echo '
-			<div id="tm-coschedule-outlet"></div>
-			<script>
-				var tm_coschedule_variables = '. json_encode($this->plugin_js_variables($post)) .';
-			</script>
-			';
+		?>
+            <iframe id="CoSmetabox" frameborder=0 border=0 scrolling="no" src="<?php echo $this->app_metabox; ?>/#/auth/<?php echo get_option('tm_coschedule_token'); ?>/<?php echo $post->ID; ?>/<?php echo $this->build; ?>" width="100%"></iframe>
+		<?php
 		}
 
 		/**
@@ -909,6 +903,24 @@ if (!class_exists('tm_coschedule')) {
 				$this->api_post('/hook/wordpress_authors/delete?_wordpress_key='. $this->token , array('user_id'=>$user_id));
 			}
 		}
+
+        /**
+         * Callback for when timezone_string or gmt_offset are changed
+         */
+        public function save_timezone_callback() {
+            if ($this->connected) {
+                $params = array();
+
+                if ( $timezone_string = get_option('timezone_string') ) {
+                    $params['timezone_string'] = $timezone_string;
+                }
+                if ( $gmt_offset = get_option('gmt_offset') ) {
+                    $params['gmt_offset'] = $gmt_offset;
+                }
+
+                $this->api_post('/hook/wordpress_keys/timezone/save?_wordpress_key='. $this->token, $params);
+            }
+        }
 
 		/**
 		 * Post data to a url on the api

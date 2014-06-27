@@ -3,8 +3,8 @@ Contributors: todaymade
 Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
-Tested up to: 3.9
-Stable tag: 2.0.1
+Tested up to: 3.9.1
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,6 +126,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 2.1.0 =
+* Changes the metabox implementation and reduces the chance of plugin conflicts
+
 = 2.0.1 =
 * Fixes the CoSchedule submenu and bugs affecting non-MySQL blogs
 
@@ -207,6 +210,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.1.0 =
+* This update changes the metabox implementation and reduces the chance of plugin conflicts
 
 = 2.0.1 =
 * This update fixes the CoSchedule submenu and bugs affecting non-MySQL blogs
