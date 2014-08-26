@@ -20,7 +20,7 @@ if (get_option('tm_coschedule_token')) {
         $('#wpwrap #footer').remove();
         $('#wpbody-content').css('paddingBottom', 0);
         var resize = function() {
-            var p = $(window).height() - $('#wpadminbar').height();
+            var p = $('#wpbody').height();
             $('#CoSiFrame').height(p);
             $('#CoSiFrame').css('display', 'block');
             $('#CoSiFrame').css('lineHeight', 0);

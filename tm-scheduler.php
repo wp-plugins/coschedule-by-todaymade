@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.1.1
+Version: 2.1.3
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -25,8 +25,8 @@ if (!class_exists('tm_coschedule')) {
         private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
         private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
 		private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-		private $version = "2.1.1";
-		private $build = 33;
+		private $version = "2.1.3";
+		private $build = 35;
 		private $connected = false;
 		private $token = false;
 
@@ -114,6 +114,7 @@ if (!class_exists('tm_coschedule')) {
 		 */
 		public function register_global_hooks() {
 			// Called whenever a post is created/updated/deleted
+            add_action( 'load-post.php', array($this, "edit_post_callback"));
 			add_action( 'save_post', array($this, "save_post_callback"));
 			add_action( 'delete_post', array($this, "delete_post_callback"));
 
@@ -722,7 +723,7 @@ if (!class_exists('tm_coschedule')) {
             }
 
             // Process category
-            if (!is_null($post['post_category'])) {
+            if (isset($post['post_category']) && !is_null($post['post_category'])) {
                 $post['post_category'] = implode($post['post_category'], ',');
             } else {
                 $post['post_category'] = "";
@@ -833,6 +834,16 @@ if (!class_exists('tm_coschedule')) {
             }
 
             return $plugins;
+        }
+
+        /**
+         * Callback for when a post is opened for editting
+         */
+        public function edit_post_callback() {
+            if (isset($_GET['post'])) {
+                $post_id = $this->sanitize_param($_GET['post']);
+                $this->save_post_callback($post_id);
+            }
         }
 
 		/**
