@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 3.9.1
-Stable tag: 2.1.3
+Stable tag: 2.1.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,6 +126,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 2.1.4 =
+* Fixes an iFrame height bug
+
 = 2.1.3 =
 * Fixes an iFrame height bug
 
@@ -219,6 +222,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.1.4 =
+* This update fixes a bug that could cause the calendar to display incorrectly.
 
 = 2.1.3 =
 * This update fixes a bug where the calendar wouldn't display correctly.
