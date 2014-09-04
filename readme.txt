@@ -3,12 +3,12 @@ Contributors: todaymade
 Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
-Tested up to: 3.9.1
-Stable tag: 2.1.4
+Tested up to: 4.0
+Stable tag: 2.1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-This plugin connects to CoSchedule, a team content marketing editorial calendar. Send unlimited social messages with each blog post.
+Save time and grow traffic by scheduling blog posts and social media on a unified drag and drop calendar made exclusively for WordPress.
 
 == Description ==
 Finally, there is an all-in-one [editorial calendar plugin for WordPress](http://coschedule.com/wordpress-editorial-calendar-plugin  "Social Media Auto Publish Editorial Calendar Plugin For WordPress") that brings true automated social media publishing to your blog!
@@ -126,6 +126,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 2.1.5 =
+* Adds support for Wordpress version 4.0
+
 = 2.1.4 =
 * Fixes an iFrame height bug
 
@@ -222,6 +225,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.1.5 =
+* This update adds support for Wordpress version 4.0
 
 = 2.1.4 =
 * This update fixes a bug that could cause the calendar to display incorrectly.
