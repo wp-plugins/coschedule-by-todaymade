@@ -1,4 +1,4 @@
-=== CoSchedule by Todaymade ===
+=== CoSchedule ===
 Contributors: todaymade
 Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr

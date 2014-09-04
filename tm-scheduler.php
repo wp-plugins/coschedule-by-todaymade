@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: CoSchedule by Todaymade
-Description: Schedule social media while you blog and visualize it all on a drag and drop editorial calendar. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
+Plugin Name: CoSchedule
+Description: Schedule social media while you blog and visualize it all on a drag and drop editorial calendar. <a href="https://app.coschedule.com" target="_blank">Account Settings</a>
 Version: 2.1.5
 Author: Todaymade
-Author URI: http://todaymade.com/
+Author URI: http://coschedule.com/
 Plugin URI: http://coschedule.com/
 */
 
