@@ -1,4 +1,4 @@
-<?php if (current_user_can('manage_options')) { ?>
+<?php if ( current_user_can( 'manage_options' ) ) { ?>
     <script type='text/javascript'>
         var tm_cos_token = "<?php echo get_option('tm_coschedule_token'); ?>";
     </script>
@@ -144,6 +144,6 @@
     </script>
 <?php
 } else {
-    include(plugin_dir_path(__FILE__) . '_access-denied.php');
+    include( plugin_dir_path( __FILE__ ) . '_access-denied.php' );
 }
 ?>

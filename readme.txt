@@ -1,14 +1,14 @@
-=== CoSchedule ===
+=== CoSchedule by Todaymade ===
 Contributors: todaymade
 Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.1.5
+Stable tag: 2.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Save time and grow traffic by scheduling blog posts and social media on a unified drag and drop calendar made exclusively for WordPress.
+This plugin connects to CoSchedule, a team content marketing editorial calendar. Send unlimited social messages with each blog post.
 
 == Description ==
 Finally, there is an all-in-one [editorial calendar plugin for WordPress](http://coschedule.com/wordpress-editorial-calendar-plugin  "Social Media Auto Publish Editorial Calendar Plugin For WordPress") that brings true automated social media publishing to your blog!
@@ -45,10 +45,12 @@ With CoSchedule, you can automate your social media sharing while you blog. When
 * Twitter
 * Facebook Profiles
 * Facebook Pages
+* Facebook Groups
 * LinkedIn Profiles
 * LinkedIn Business Pages
 * LinkedIn Groups
 * Google+ Pages
+* Pinterest
 * Buffer
 * Tumblr
 
@@ -125,6 +127,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 5. **Social Scheduling While You Blog**: Social messages are content, too. Write as many as you need at the same time you write your blog post. Hit publish, and automatically set them all in motion.
 
 == Changelog ==
+
+= 2.2.0 =
+* Brings plugin code up to speed with WordPress VIP coding standards, adds login to metabox, and improves security
 
 = 2.1.5 =
 * Adds support for Wordpress version 4.0
@@ -225,6 +230,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.2.0 =
+* This update brings the plugin code up to speed with WordPress VIP coding standards, adds login to metabox, and improves security.
 
 = 2.1.5 =
 * This update adds support for Wordpress version 4.0
