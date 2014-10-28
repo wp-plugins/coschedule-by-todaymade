@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.2.0
+Version: 2.2.1
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -25,8 +25,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
         private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.2.0";
-        private $build = 38;
+        private $version = "2.2.1";
+        private $build = 39;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -42,9 +42,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             register_activation_hook( __FILE__, array( $this, 'activation' ) );
             register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
-            // Load token
+            // Load variables
             $this->token = get_option( 'tm_coschedule_token' );
             $this->blog_id = get_option( 'tm_coschedule_id' );
+            $this->synced_build = get_option( 'tm_coschedule_synced_build' );
 
             // Check if connected to api
             if ( ! empty( $this->token ) && ! empty( $this->blog_id ) ) {
@@ -55,8 +56,13 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $this->register_global_hooks();
 
             // Register admin only hooks
-            if( is_admin() ) {
+            if ( is_admin() ) {
                 $this->register_admin_hooks();
+            }
+
+            // Sync build number
+            if ( $this->synced_build === false || intval( $this->synced_build ) !==  intval( $this->build ) ) {
+                $this->save_build_callback();
             }
         }
 
@@ -99,6 +105,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             delete_option( 'tm_coschedule_id' );
             delete_option( 'tm_coschedule_activation_redirect' );
             delete_option( 'tm_coschedule_custom_post_types_list' );
+            delete_option( 'tm_coschedule_synced_build' );
         }
 
         /**
@@ -109,6 +116,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             delete_option( 'tm_coschedule_id' );
             delete_option( 'tm_coschedule_activation_redirect' );
             delete_option( 'tm_coschedule_custom_post_types_list' );
+            delete_option( 'tm_coschedule_synced_build' );
         }
 
         /**
@@ -169,6 +177,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             // Ajax: Get function
             add_action( 'wp_ajax_tm_aj_function', array( $this, 'tm_aj_function' ) );
             add_action( 'wp_ajax_nopriv_tm_aj_function', array( $this, 'tm_aj_function' ) );
+
+            // Ajax: The main entry point (when plugin_build > 38)
+            add_action( 'wp_ajax_tm_aj_action', array( $this, 'tm_aj_action' ) );
+            add_action( 'wp_ajax_nopriv_tm_aj_action', array( $this, 'tm_aj_action' ) );
 
             // Ajax: Deactivation
             add_action( 'wp_ajax_tm_aj_deactivation', array( $this, 'tm_aj_deactivation' ) );
@@ -349,11 +361,13 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             if ( empty( $custom_post_types_list ) && true == $this->connected ) {
                 // Load remote blog information
                 $resp = $this->api_get( '/wordpress_keys?_wordpress_key=' . $this->token );
-                if ( isset( $resp['response']['code'] ) && 200 === $resp['response']['code'] ) {
+
+                // be extra careful with resp as we don't want an exception to escape this function //
+                if ( ! is_wp_error($resp) && isset( $resp['response'] ) && isset( $resp['response']['code'] ) && 200 === $resp['response']['code'] ) {
                     $json = json_decode( $resp['body'], true );
 
                     // Check for a good response
-                    if ( isset( $json['result'][0] ) && ! empty( $json['result'][0]['custom_post_types'] ) ) {
+                    if ( isset( $json['result'] ) && isset( $json['result'][0] ) && ! empty( $json['result'][0]['custom_post_types'] ) ) {
                         $custom_post_types_list = $json['result'][0]['custom_post_types_list'];
 
                         // Save custom list
@@ -466,7 +480,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         /**
          * Ajax: Return blog info
          */
-        public function tm_aj_get_bloginfo() {
+        public function tm_aj_get_bloginfo( $data_args ) {
             try {
                 header( 'Content-Type: application/json' );
                 $vars = array(
@@ -484,7 +498,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                     "plugin_build"    =>  $this->build
                 );
 
-                if ( isset( $_GET['tm_debug'] ) ) {
+                if ( isset( $_GET['tm_debug'] ) || isset( $data_args['tm_debug'] ) ) {
                     $vars["debug"] = array();
                     $vars["debug"]["server_time"] = time();
                     $vars["debug"]["server_date"] = date( 'c' );
@@ -518,9 +532,14 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         /**
          * Ajax: Return full post with permalink
          */
-        public function tm_aj_get_full_post() {
+        public function tm_aj_get_full_post( $data_args ) {
             try {
-                $id = $_GET['post_id'];
+                if ( isset( $_GET['post_id'] ) ) {
+                    $id = $_GET['post_id'];
+                } else {
+                    $id = $data_args['post_id'];
+                }
+
                 $this->sanitize_param( $id );
 
                 header( 'Content-Type: application/json' );
@@ -535,7 +554,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         /**
          * Ajax: Set token
          */
-        public function tm_aj_set_token() {
+        public function tm_aj_set_token( $data_args ) {
             header( 'Content-Type: text/plain' );
 
             try {
@@ -544,6 +563,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                     $params = $_POST;
                 } elseif ( isset( $_GET['token'] ) && isset( $_GET['id'] ) ) {
                     $params = $_GET;
+                } elseif ( isset( $data_args['token'] ) && isset( $data_args['id'] ) ) {
+                    $params = $data_args;
                 } else {
                     $params = array();
                 }
@@ -565,11 +586,16 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         /**
          * Ajax: Check a token against the current token
          */
-        public function tm_aj_check_token() {
+        public function tm_aj_check_token( $data_args ) {
             header( 'Content-Type: text/plain' );
 
             try {
-                $token = $_GET['token'];
+                if ( isset( $_GET['token'] ) ) {
+                    $token = $_GET['token'];
+                } else {
+                    $token = $data_args['token'];
+                }
+
                 $this->sanitize_param( $token );
 
                 // Compare
@@ -587,11 +613,16 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         /**
          * Ajax: Set custom post types
          */
-        public function tm_aj_set_custom_post_types() {
+        public function tm_aj_set_custom_post_types( $data_args ) {
             header( 'Content-Type: text/plain' );
 
             try {
-                $list = $_GET['post_types_list'];
+                if ( isset( $_GET['post_types_list'] ) ) {
+                    $list = $_GET['post_types_list'];
+                } else {
+                    $list = $data_args['post_types_list'];
+                }
+
                 $this->sanitize_param( $list );
                 echo $list;
                 update_option( 'tm_coschedule_custom_post_types_list', $list );
@@ -671,14 +702,152 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
+         * AJAX: main entry point (when plugin_build > 38)
+         */
+        public function tm_aj_action() {
+            header( 'Content-Type: text/plain' );
+            try {
+                // $args expected to contain only 'action' and 'data' keys, all others ignored
+                $args = $_GET;
+
+                // Remove 'action' arg - the means by which this function was invoked
+                unset( $args['action'] );
+
+                // make $args safe
+                $this->sanitize_array( $args );
+
+                // Validate 'data' arg
+                if ( ! isset( $args['data'] ) ) {
+                    throw new Exception( 'Invalid API call. Missing data.' );
+                }
+
+                // Decode 'data' and re-define $args
+                $args = json_decode( base64_decode( $args['data'] ), true );
+
+                // NOTE: After this point, $args elements should be individually sanitized before use!!!
+
+                // Normalize 'method' arg: prefer 'method', accept 'call' or die with exception if neither provided
+                if ( ! isset( $args['method'] ) ) {
+                    if ( isset( $args['call'] ) ) {
+                        $args['method'] = $args['call'];
+                    } else if ( isset( $args['action'] ) ) {
+                        $args['method'] = $args['action'];
+                    }
+                }
+
+                if ( ! isset( $args['method'] ) ) {
+                    throw new Exception( 'Invalid API call. Missing method.' );
+                }
+
+                // Sanitize what is trying to be called
+                $this->sanitize_param( $args['method'] );
+                $func = $args['method'];
+
+                // Remove nested 'method', 'action' and 'call'
+                unset( $args['method'] );
+                unset( $args['action'] );
+                unset( $args['call'] );
+
+                // functions that handle token validation internally //
+                $defer_token_check = array(
+                    'tm_aj_deactivation',
+                    'tm_aj_check_token',
+                    'tm_aj_get_bloginfo'
+                );
+
+                // Functions in the WP environment
+                $wp_functions = array(
+                    'get_users',
+                    'get_categories',
+                    'get_post_types',
+                    'wp_update_post',
+                    'wp_insert_post'
+                );
+
+                // Functions defined by plugin
+                $private_functions = array(
+                    'get_posts_with_categories',
+                    'tm_aj_get_bloginfo',
+                    'tm_aj_get_full_post',
+                    'tm_aj_check_token',
+                    'tm_aj_set_custom_post_types',
+                    'tm_aj_deactivation'
+                );
+
+                // Allowed functions
+                $allowed = array_merge( $wp_functions, $private_functions );
+
+                // Validate allowed
+                if ( ! in_array( $func, $allowed ) ) {
+                    throw new Exception( 'Invalid API call. Method not allowed.' );
+                }
+
+                // Only invoke validation for those functions not having it internally
+                if ( ! in_array( $func, $defer_token_check) ) {
+                    // Validate 'token' arg
+                    if ( ! isset( $args['token'] ) ) {
+                        throw new Exception( 'Invalid API call. Token not found.' );
+                    }
+                    $this->sanitize_param( $args['token'] );
+                    $this->valid_token( $args['token'] );
+                }
+
+                // Fix: Prevent WP from stripping iframe tags when updating post
+                if ( 'wp_update_post' === $func ) {
+                    remove_filter( 'content_save_pre', 'wp_filter_post_kses' );
+                }
+
+                // Is the target function private ?
+                $is_private = in_array( $func, $private_functions ) ;
+
+                // wrap model in order to preserve it through call_user_func_array invocation //
+                if ( isset( $args['args'] ) ) {
+                    $args = array( $args['args'] );
+                } else {
+                    $args = array( $args );
+                }
+
+                // Call $func with $args
+                if ( $is_private ) {
+                    $out = call_user_func_array( array( $this, $func ), $args );
+                } else {
+                    $out = call_user_func_array( $func, $args );
+                }
+
+                // Handle output
+                if ( is_array( $out ) ) {
+                    $out = array_values( $out );
+                    header( 'Content-Type: application/json' );
+                    echo json_encode( $out );
+                } else {
+                    // Check for errors
+                    if ( is_wp_error( $out ) ) {
+                        echo $out->get_error_message();
+                    } else {
+                        echo $out;
+                    }
+                }
+
+            } catch ( Exception $e ) {
+                echo 'Exception: ' . $e->getMessage();
+            }
+            die();
+        }
+
+        /**
          * AJAX: Handles deactivation task
          */
-        public function tm_aj_deactivation() {
+        public function tm_aj_deactivation( $data_args ) {
             header( 'Content-Type: text/plain' );
 
             try {
                 // Validate call
-                $token = $_GET['token'];
+                if ( isset( $_GET['token'] ) ) {
+                    $token = $_GET['token'];
+                } else {
+                    $token = $data_args['token'];
+                }
+
                 $this->sanitize_param( $token );
                 $this->valid_token( $token );
 
@@ -946,6 +1115,22 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 }
 
                 $this->api_post( '/hook/wordpress_keys/timezone/save?_wordpress_key=' . $this->token, $params );
+            }
+        }
+
+        /**
+         * Callback for when plugin build number is changed to notify the api
+         */
+        public function save_build_callback() {
+            if ( true == $this->connected ) {
+                // Update a tracking option in wordpress
+                update_option( 'tm_coschedule_synced_build', $this->build );
+
+                // Post new info to api
+                $params = array();
+                $params['build'] = $this->build;
+                $params['version'] = $this->version;
+                $this->api_post( '/hook/wordpress_keys/build/save?_wordpress_key=' . $this->token, $params );
             }
         }
 
