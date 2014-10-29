@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.2.1
+Version: 2.2.2
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -25,8 +25,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
         private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.2.1";
-        private $build = 39;
+        private $version = "2.2.2";
+        private $build = 40;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -671,7 +671,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 }
 
                 // Fix: Prevent WP from stripping iframe tags when updating post
-                if ( 'wp_update_post' === $func ) {
+                if ( 'wp_update_post' === $func || 'wp_insert_post' === $func ) {
+                    remove_filter( 'title_save_pre', 'wp_filter_kses' );
                     remove_filter( 'content_save_pre', 'wp_filter_post_kses' );
                 }
 
@@ -793,7 +794,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 }
 
                 // Fix: Prevent WP from stripping iframe tags when updating post
-                if ( 'wp_update_post' === $func ) {
+                if ( 'wp_update_post' === $func || 'wp_insert_post' === $func ) {
+                    remove_filter( 'title_save_pre', 'wp_filter_kses' );
                     remove_filter( 'content_save_pre', 'wp_filter_post_kses' );
                 }
 
