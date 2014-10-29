@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.2.2
+Version: 2.2.3
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -25,8 +25,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
         private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.2.2";
-        private $build = 40;
+        private $version = "2.2.3";
+        private $build = 41;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -708,8 +708,13 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         public function tm_aj_action() {
             header( 'Content-Type: text/plain' );
             try {
-                // $args expected to contain only 'action' and 'data' keys, all others ignored
-                $args = $_GET;
+                // favor POST values for compatibility  //
+                if ( isset( $_POST['action'] ) ) { // plugin_build > 40 will prefer POST
+                   $args = $_POST;
+                } else { // fallback to GET params //
+                   $args = $_GET;
+                }
+                // at this point $args expected to contain only 'action' and 'data' keys, all others ignored
 
                 // Remove 'action' arg - the means by which this function was invoked
                 unset( $args['action'] );

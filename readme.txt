@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.2.2
+Stable tag: 2.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,6 +128,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 2.2.3 =
+* Fixes issues with certain PHP configurations
+
 = 2.2.2 =
 * Fixes issues with syncing headlines
 
@@ -236,6 +239,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.2.3 =
+* This update fixes issues with certain PHP configurations
 
 = 2.2.2 =
 * This update fixes a bug that caused some headlines to sync incorrectly
