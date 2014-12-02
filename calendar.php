@@ -1,36 +1,48 @@
 <?php
+
+$url = 'https://dgp49e2avkx9v.cloudfront.net/#/authenticate?blogID=' . esc_attr( get_option( 'tm_coschedule_id' ) );
+$url .= '&build=' . $this->build;
+$url .= "&userID=" . $this->current_user_id;
+$render_calendar = true;
+
+// Check permissions
 if ( get_option( 'tm_coschedule_token' ) ) {
     if ( current_user_can( 'edit_posts' ) && isset( $_GET['tm_cos_user_token'] ) && ! empty( $_GET['tm_cos_user_token'] ) ) {
-?>
-        <iframe id="CoSiFrame" frameborder="0" border="0" src="https://dgp49e2avkx9v.cloudfront.net/#/auth2/<?php echo esc_attr( get_option( 'tm_coschedule_id' ) ); ?>/<?php echo esc_attr( $_GET['tm_cos_user_token'] ); ?>/schedule" width="100%"></iframe>
-    <?php } else if ( current_user_can( 'edit_posts' ) ) { ?>
-        <iframe id="CoSiFrame" frameborder="0" border="0" src="https://dgp49e2avkx9v.cloudfront.net/#/auth2/<?php echo esc_attr( get_option( 'tm_coschedule_id' ) ); ?>/0/schedule" width="100%"></iframe>
-<?php
+        $url .= '&userToken=' . esc_attr( $_GET['tm_cos_user_token'] ) . '&redirect=schedule';
+    } else if ( current_user_can( 'edit_posts' ) ) {
+        $url .= '&redirect=schedule';
     } else {
         include( '_access-denied.php' );
+        $render_calendar = false;
     }
 } else {
     include( '_missing-token.php' );
+    $render_calendar = false;
 }
-?>
-<script>
-    jQuery(document).ready(function($) {
-        $('.update-nag').remove();
-        $('#wpfooter').remove();
-        $('#wpwrap #footer').remove();
-        $('#wpbody-content').css('paddingBottom', 0);
+
+// Render calendar
+if ( true == $render_calendar ) { ?>
+    <iframe id="CoSiFrame" frameborder="0" border="0" src="<?php echo esc_url( $url ); ?>" width="100%"></iframe>
+    <script>
+        jQuery(document).ready(function($) {
+            $('.update-nag').remove();
+            $('#wpfooter').remove();
+            $('#wpwrap #footer').remove();
+            $('#wpbody-content').css('paddingBottom', 0);
 
 
-        var resize = function() {
-            var p = $(window).height() - $('#wpadminbar').height();
-            $('#CoSiFrame').height(p);
-            $('#CoSiFrame').css('display', 'block');
-            $('#CoSiFrame').css('lineHeight', 0);
-        }
+            $('#CoSiFrame').css('min-height',$('#wpbody').height());
+            var resize = function() {
+                var p = $(window).height() - $('#wpadminbar').height();
+                $('#CoSiFrame').height(p);
+                $('#CoSiFrame').css('display', 'block');
+                $('#CoSiFrame').css('lineHeight', 0);
+            }
 
-        resize();
-        $(window).resize(function() {
             resize();
+            $(window).resize(function() {
+                resize();
+            });
         });
-    });
-</script>
+    </script>
+<?php }

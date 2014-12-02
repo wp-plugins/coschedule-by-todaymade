@@ -1,6 +1,6 @@
 <?php if ( current_user_can( 'manage_options' ) ) { ?>
     <script type='text/javascript'>
-        var tm_cos_token = "<?php echo get_option('tm_coschedule_token'); ?>";
+        var tm_cos_token = "<?php echo esc_js( get_option('tm_coschedule_token') ); ?>";
     </script>
     <!--[if IE 9]>
       <style>
@@ -113,7 +113,7 @@
                                 </div>
                                 <div class="tm_footer_logos cos-plugin-footer text-center">
                                     <div class="customer-logos">
-                                        <img src="http://direct.coschedule.com/img/app-tmp/customer-logos-color.png">
+                                        <img src="<?php echo esc_url( 'http://direct.coschedule.com/img/app-tmp/customer-logos-color.png' ); ?>">
                                         CoSchedule is trusted by WordPress bloggers and content marketers around the world.
                                     </div>
                                 </div>
@@ -146,4 +146,3 @@
 } else {
     include( plugin_dir_path( __FILE__ ) . '_access-denied.php' );
 }
-?>

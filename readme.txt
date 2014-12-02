@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.2.3
+Stable tag: 2.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,6 +128,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 2.2.4 =
+* Improves security, adds VIP code style enhancements, adds CoSchedule logout during author switching, and fixes a potential problem with image syncing
+
 = 2.2.3 =
 * Fixes issues with certain PHP configurations
 
@@ -240,6 +243,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Upgrade Notice ==
 
+= 2.2.4 =
+* This update improves security, adds VIP code style enhancements, adds CoSchedule logout during author switching, and fixes an issue with partial image misses
+
 = 2.2.3 =
 * This update fixes issues with certain PHP configurations
 
@@ -247,7 +253,7 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * This update fixes a bug that caused some headlines to sync incorrectly
 
 = 2.2.1 =
-* Improves compatibility with security plugins
+* This update improves compatibility with security plugins
 
 = 2.2.0 =
 * This update brings the plugin code up to speed with WordPress VIP coding standards, adds login to metabox, and improves security

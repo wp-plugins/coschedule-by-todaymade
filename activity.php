@@ -1,8 +1,11 @@
 <?php
 if ( get_option( 'tm_coschedule_token' ) ) {
     if ( current_user_can( 'edit_posts' ) ) {
+        $url = "https://dgp49e2avkx9v.cloudfront.net/#/authenticate?blogID=" . esc_attr( get_option( 'tm_coschedule_id' ) );
+        $url .= "&redirect=dashboard&build=" . $this->build;
+        $url .= "&userID=" . $this->current_user_id;
 ?>
-    <iframe id="CoSiFrame" frameborder="0" border="0" src="https://dgp49e2avkx9v.cloudfront.net/#/auth2/<?php echo esc_attr( get_option( 'tm_coschedule_id' ) ); ?>/0/dashboard" width="100%"></iframe>
+    <iframe id="CoSiFrame" frameborder="0" border="0" src="<?php echo esc_url( $url ); ?>" width="100%"></iframe>
 
     <script>
         jQuery(document).ready(function($) {
@@ -29,4 +32,3 @@ if ( get_option( 'tm_coschedule_token' ) ) {
 } else {
     include( '_missing-token.php' );
 }
-?>
