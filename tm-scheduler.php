@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.2.4
+Version: 2.2.5
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -25,8 +25,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
         private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.2.4";
-        private $build = 42;
+        private $version = "2.2.5";
+        private $build = 43;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -285,10 +285,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             // Check if connected
             if ( true == $this->connected ) {
                 $this->plugin_iframe_styles();
-                include __DIR__ . '/calendar.php';
+                include( sprintf( "%s/calendar.php", dirname( __FILE__ ) ) );
             } else {
                 $this->plugin_settings_scripts();
-                include __DIR__ . '/plugin_setup.php';
+                include( sprintf( "%s/plugin_setup.php", dirname( __FILE__ ) ) );
             }
         }
 
@@ -307,7 +307,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 $this->plugin_settings_scripts();
             }
 
-            include __DIR__ . '/team.php';
+            include( sprintf( "%s/team.php", dirname( __FILE__ ) ) );
         }
 
         /**
@@ -321,7 +321,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             // Setup styles
             $this->plugin_iframe_styles();
 
-            include __DIR__ . '/activity.php';
+            include( sprintf( "%s/activity.php", dirname( __FILE__ ) ) );
         }
 
         /**
@@ -339,7 +339,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 $this->plugin_settings_scripts();
             }
 
-            include __DIR__ . '/settings.php';
+            include( sprintf( "%s/settings.php", dirname( __FILE__ ) ) );
         }
 
         /**
@@ -353,7 +353,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             // Setup styles
             $this->plugin_iframe_styles();
 
-            include __DIR__ . '/help.php';
+            include( sprintf( "%s/help.php", dirname( __FILE__ ) ) );
         }
 
         /**
