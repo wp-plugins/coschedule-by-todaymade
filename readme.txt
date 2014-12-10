@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.2.5
+Stable tag: 2.2.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,6 +128,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
+= 2.2.6 =
+* Fixes an issue with loading the css for the plugin
+
 = 2.2.5 =
 * Adds compatibility with PHP 5.2.x
 
@@ -245,6 +248,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.2.6 =
+* This update fixes an issue with loading the css for the plugin
 
 = 2.2.5 =
 * This update adds compatibility with PHP 5.2.x
