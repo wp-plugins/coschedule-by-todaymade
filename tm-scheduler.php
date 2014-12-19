@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.2.6
+Version: 2.2.7
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -23,10 +23,9 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $api = "https://api.coschedule.com";
         private $app = "https://app.coschedule.com";
         private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
-        private $plugin_remote = "https://d27i93e1y9m4f5.cloudfront.net";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.2.6";
-        private $build = 44;
+        private $version = "2.2.7";
+        private $build = 45;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -46,7 +45,6 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             // Load variables
             $this->token = get_option( 'tm_coschedule_token' );
             $this->blog_id = get_option( 'tm_coschedule_id' );
-            $this->current_user_id = get_current_user_id();
             $this->synced_build = get_option( 'tm_coschedule_synced_build' );
 
             // Check if connected to api
@@ -216,6 +214,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         public function add_submenu() {
             if ( true == $this->connected ) {
                 add_submenu_page( 'tm_coschedule_calendar', 'My Activity', 'My Activity', 'edit_posts', 'tm_coschedule_activity', array( $this, 'plugin_activity_page' ) );
+                add_submenu_page( 'tm_coschedule_calendar', 'Top Posts', 'Top Posts', 'edit_posts', 'tm_coschedule_top_posts', array( $this, 'plugin_top_posts_page' ) );
                 add_submenu_page( 'tm_coschedule_calendar', 'My Team', 'My Team', 'edit_posts', 'tm_coschedule_team', array( $this, 'plugin_team_page' ) );
                 add_submenu_page( 'tm_coschedule_calendar', 'Settings', 'Settings', 'edit_posts', 'tm_coschedule_settings', array( $this, 'plugin_settings_page' ) );
                 add_submenu_page( 'tm_coschedule_calendar', 'Need Help?', 'Need Help?', 'edit_posts', 'tm_coschedule_help', array( $this, 'plugin_help_page' ) );
@@ -238,9 +237,9 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          * Enqueue script for opening submenu links in new window
          */
         public function admin_submenu_new_window_items_jquery() {
-            $cache_bust = $this->get_cache_bust();
+            $cache_bust = urlencode( $this->get_cache_bust() );
             $url = $this->assets . '/plugin/js/cos-plugin-new-window.js?cb=' . $cache_bust;
-            wp_enqueue_script( 'cos_js_plugin_new_window', esc_url( $url ), false, null, true );
+            wp_enqueue_script( 'cos_js_plugin_new_window', $url, false, null, true );
         }
 
         /**
@@ -258,20 +257,19 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         * Settings page styles
         */
         public function plugin_iframe_styles() {
-            $cache_bust = $this->get_cache_bust();
+            $cache_bust = urlencode( $this->get_cache_bust() );
             $url = $this->assets . '/plugin/css/cos-iframe-fix.css?cb=' . $cache_bust;
-            wp_enqueue_style( 'cos_css', esc_url( $url ) );
+            wp_enqueue_style( 'cos_css', $url );
         }
 
         /**
         * Settings page scripts
         */
         public function plugin_settings_scripts() {
-            $cache_bust = $this->get_cache_bust();
-
-            wp_enqueue_style( 'cos_css', esc_url( $this->assets . '/plugin/css/cos-plugin-setup.css?cb=' . $cache_bust ) );
-            wp_enqueue_script( 'cos_js_config', esc_url( $this->assets . '/config.js?cb=' . $cache_bust ), false, null, true );
-            wp_enqueue_script( 'cos_js_plugin', esc_url( $this->assets . '/plugin/js/cos-plugin-setup.js?cb=' . $cache_bust ), false, null, true );
+            $cache_bust = urlencode( $this->get_cache_bust() );
+            wp_enqueue_style( 'cos_css', $this->assets . '/plugin/css/cos-plugin-setup.css?cb=' . $cache_bust );
+            wp_enqueue_script( 'cos_js_config', $this->assets . '/config.js?cb=' . $cache_bust, false, null, true );
+            wp_enqueue_script( 'cos_js_plugin', $this->assets . '/plugin/js/cos-plugin-setup.js?cb=' . $cache_bust, false, null, true );
         }
 
         /**
@@ -322,6 +320,20 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $this->plugin_iframe_styles();
 
             include( sprintf( "%s/activity.php", dirname( __FILE__ ) ) );
+        }
+
+        /**
+         * Top Posts page menu callback
+         */
+        public function plugin_top_posts_page() {
+            if( ! current_user_can( 'edit_posts' ) ) {
+                wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+            }
+
+            // Setup styles
+            $this->plugin_iframe_styles();
+
+            include( sprintf( "%s/top_posts.php", dirname( __FILE__ ) ) );
         }
 
         /**
@@ -428,22 +440,20 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         * Metabox iframe styles
         */
         public function metabox_iframe_styles() {
-            $cache_bust = $this->get_cache_bust();
+            $cache_bust = urlencode( $this->get_cache_bust() );
             $url = $this->assets . '/plugin/css/cos-metabox.css?cb=' . $cache_bust;
-
-            wp_enqueue_style( 'cos_metabox_css', esc_url( $url ) );
+            wp_enqueue_style( 'cos_metabox_css', $url );
         }
 
         /**
         * Metabox iframe scripts
         */
         public function metabox_iframe_scripts() {
-            $cache_bust = $this->get_cache_bust();
+            $cache_bust = urlencode( $this->get_cache_bust() );
             $resizer_url = $this->assets . '/plugin/js/cos-iframe-resizer.js?cb=' . $cache_bust;
             $resizer_exec_url = $this->assets . '/plugin/js/cos-iframe-resizer-exec.js?cb=' . $cache_bust;
-
-            wp_enqueue_script( 'cos_js_iframe_resizer', esc_url( $resizer_url ), false, null, true );
-            wp_enqueue_script( 'cos_js_iframe_resizer_exec', esc_url( $resizer_exec_url ), false, null, true );
+            wp_enqueue_script( 'cos_js_iframe_resizer', $resizer_url, false, null, true );
+            wp_enqueue_script( 'cos_js_iframe_resizer_exec', $resizer_exec_url, false, null, true );
         }
 
         /*
@@ -452,11 +462,11 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          * Inserts the meta box
          */
         public function meta_box_insert( $post ) {
-            $url = esc_attr( $this->app_metabox );
-            $url .= "/#/authenticate?blogID=" . esc_attr( get_option( 'tm_coschedule_id' ) );
-            $url .= "&postID=" . esc_attr( $post->ID );
-            $url .= "&build=" . esc_attr( $this->build );
-            $url .= "&userID=" . esc_attr( $this->current_user_id );
+            $url = $this->app_metabox;
+            $url .= "/#/authenticate?blogID=" . urlencode( get_option( 'tm_coschedule_id' ) );
+            $url .= "&postID=" . urlencode( $post->ID );
+            $url .= "&build=" . urlencode( $this->build );
+            $url .= "&userID=" . urlencode( $this->current_user_id );
         ?>
             <iframe id="CoSmetabox" frameborder="0" border="0" scrolling="no" src="<?php echo esc_url( $url ); ?>" width="100%"></iframe>
         <?php
@@ -1179,7 +1189,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 'method' => 'POST',
                 'body'   => $this->array_decode_entities( $body )
             );
-            return $http->request( esc_url( $this->api . $url ), $params );
+            return $http->request( $this->api . $url, $params );
         }
 
         /**
@@ -1188,8 +1198,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          */
         public function api_get( $url ) {
             $http = new WP_Http;
-            $url = $this->api . $url;
-            return $http->request( esc_url( $url ) );
+            return $http->request( $this->api . $url );
         }
 
         /**
@@ -1199,7 +1208,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         public function get_cache_bust() {
             $location = $this->assets . '/plugin/cache_bust.txt';
             $response = '';
-            $result;
+            $result = null;
 
             // Check if VIP functions exist, which will cache response
             // for fifteen minutes, with a timeout of three seconds
