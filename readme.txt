@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 4.1
-Stable tag: 2.2.9
+Stable tag: 2.3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,7 +127,7 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Changelog ==
 
-= 2.2.9 =
+= 2.3.0 =
 * Improves publication time accuracy for blogs using caching plugins.
 * Adds save/delete filter hooks usable by third-party plugin developers.
 * Add ability to publish posts that have missed their scheduled publish time.
@@ -260,7 +260,7 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 
 == Upgrade Notice ==
 
-= 2.2.9 =
+= 2.3.0 =
 * This update improves publication time accuracy for blogs using caching plugins
 
 = 2.2.8 =
