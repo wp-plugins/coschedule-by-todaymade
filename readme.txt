@@ -4,7 +4,7 @@ Donate link: http://coschedule.com
 Tags: calendar, schedule, social media, editorial, twitter, facebook, tweets, auto publish, linkedin, tumblr
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 2.2.8
+Stable tag: 2.2.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,6 +126,12 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 5. **Social Scheduling While You Blog**: Social messages are content, too. Write as many as you need at the same time you write your blog post. Hit publish, and automatically set them all in motion.
 
 == Changelog ==
+
+= 2.2.9 =
+* Improves publication time accuracy for blogs using caching plugins.
+* Adds save/delete filter hooks usable by third-party plugin developers.
+* Add ability to publish posts that have missed their scheduled publish time.
+* Improve plugin behavior when installed into WordPress older than 3.5.
 
 = 2.2.8 =
 * Fixes a small issue with syncing the plugin version number
@@ -253,6 +259,9 @@ We charge a monthly fee for CoSchedule because we provide an ongoing service tha
 * Private beta release
 
 == Upgrade Notice ==
+
+= 2.2.9 =
+* This update improves publication time accuracy for blogs using caching plugins
 
 = 2.2.8 =
 * This update fixes a small issue with syncing the plugin version number
