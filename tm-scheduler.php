@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.3.0
+Version: 2.3.1
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -22,14 +22,15 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
     class TM_CoSchedule  {
         private $api = "https://api.coschedule.com";
         private $app = "https://app.coschedule.com";
-        private $app_metabox = "https://d1aok0dvhg3mh7.cloudfront.net";
+        private $app_metabox = "https://app.coschedule.com/metabox";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.3.0";
-        private $build = 48;
+        private $version = "2.3.1";
+        private $build = 49;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
         private $current_user_id = false;
+        private $is_wp_vip = false;
 
         /**
          * Class constructor: initializes class variables and adds actions and filters.
@@ -46,6 +47,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $this->token = get_option( 'tm_coschedule_token' );
             $this->blog_id = get_option( 'tm_coschedule_id' );
             $this->synced_build = get_option( 'tm_coschedule_synced_build' );
+            $this->is_wp_vip = ( defined( 'WPCOM_IS_VIP_ENV' ) && WPCOM_IS_VIP_ENV === true );
 
             // Check if connected to api
             if ( ! empty( $this->token ) && ! empty( $this->blog_id ) ) {
@@ -232,7 +234,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             global $submenu;
 
             if ( true == $this->connected ) {
-                $url = $this->app . '/#/blog/' . $this->blog_id . '/schedule';
+                $url = $this->app . '/#/calendar/' . $this->blog_id . '/schedule';
                 $submenu['tm_coschedule_calendar'][500] = array( '<span class="cos-submenu-new-window">Open In Web App</span>', 'edit_posts', esc_url( $url ) );
             }
         }
@@ -584,7 +586,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                     "timezone_string" =>  get_option( "timezone_string" ),
                     "gmt_offset"      =>  get_option( "gmt_offset" ),
                     "plugin_version"  =>  $this->version,
-                    "plugin_build"    =>  $this->build
+                    "plugin_build"    =>  $this->build,
+                    "is_wp_vip"       =>  $this->is_wp_vip
                 );
 
                 if ( isset( $_GET['tm_debug'] ) || isset( $data_args['tm_debug'] ) ) {

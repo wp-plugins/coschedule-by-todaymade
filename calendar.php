@@ -1,6 +1,6 @@
 <?php
 
-$url = 'https://dgp49e2avkx9v.cloudfront.net/#/authenticate?blogID=' . urlencode( get_option( 'tm_coschedule_id' ) );
+$url = 'https://app.coschedule.com/calendar/#/authenticate?blogID=' . urlencode( get_option( 'tm_coschedule_id' ) );
 $url .= '&build=' . $this->build;
 $url .= "&userID=" . $this->current_user_id;
 $render_calendar = true;
