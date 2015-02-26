@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.3.1
+Version: 2.3.2
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -24,8 +24,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app = "https://app.coschedule.com";
         private $app_metabox = "https://app.coschedule.com/metabox";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.3.1";
-        private $build = 49;
+        private $version = "2.3.2";
+        private $build = 50;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -66,15 +66,6 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             if ( $this->synced_build === false || intval( $this->synced_build ) !==  intval( $this->build ) ) {
                 $this->save_build_callback();
             }
-        }
-
-        /**
-         * Print the contents of an array
-         */
-        public function debug( $array ) {
-            echo '<pre>';
-            print_r( $array );
-            echo '</pre>';
         }
 
         /**
@@ -260,8 +251,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
-        * Settings page styles
-        */
+         * Settings page styles
+         */
         public function plugin_iframe_styles() {
             $cache_bust = urlencode( $this->get_cache_bust() );
             $url = $this->assets . '/plugin/css/cos-iframe-fix.css?cb=' . $cache_bust;
@@ -269,8 +260,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
-        * Settings page scripts
-        */
+         * Settings page scripts
+         */
         public function plugin_settings_scripts() {
             $cache_bust = urlencode( $this->get_cache_bust() );
             wp_enqueue_style( 'cos_css', $this->assets . '/plugin/css/cos-plugin-setup.css?cb=' . $cache_bust );
@@ -443,8 +434,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
-        * Metabox iframe styles
-        */
+         * Metabox iframe styles
+         */
         public function metabox_iframe_styles() {
             $cache_bust = urlencode( $this->get_cache_bust() );
             $url = $this->assets . '/plugin/css/cos-metabox.css?cb=' . $cache_bust;
@@ -452,8 +443,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
-        * Metabox iframe scripts
-        */
+         * Metabox iframe scripts
+         */
         public function metabox_iframe_scripts() {
             $cache_bust = urlencode( $this->get_cache_bust() );
             $resizer_url = $this->assets . '/plugin/js/cos-iframe-resizer.js?cb=' . $cache_bust;
@@ -461,8 +452,6 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             wp_enqueue_script( 'cos_js_iframe_resizer', $resizer_url, false, null, true );
             wp_enqueue_script( 'cos_js_iframe_resizer_exec', $resizer_exec_url, false, null, true );
         }
-
-        /*
 
         /**
          * Inserts the meta box
@@ -503,9 +492,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 $error = array(
                     'error' => $validate
                 );
-                header( 'Content-Type: application/json' );
-                echo json_encode( $error );
-                die();
+                $this->respond_json_and_die( $error );
             }
         }
 
@@ -515,12 +502,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          */
         public function tm_aj_trigger_cron( $data_args ) {
             $response = array();
-            header( 'Content-Type: application/json' );
-
             try {
                 if ( isset( $_GET['token'] ) ) {
                     $token = $_GET['token'];
-                } else {
+                } else if ( isset( $data_args['token'] ) ) {
                     $token = $data_args['token'];
                 }
                 $this->sanitize_param( $token );
@@ -557,15 +542,14 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                     $response['publish_missed_schedule_posts_result'] = $publish_missed_schedule_posts_result;
                     $response['server_time'] = time();
                     $response['server_date'] = date( 'c' );
-                    $response['gmt_offset'] = get_option('gmt_offset');
+                    $response['gmt_offset'] = get_option( 'gmt_offset' );
                     $response['tz_abbrev'] = date( 'T' );
                 }
             } catch ( Exception $e ) {
                 $response['error'] = $e->getMessage();
             }
 
-            echo json_encode( $this->array_decode_entities( $response ) );
-            die();
+            $this->respond_json_and_die( $this->array_decode_entities( $response ) );
         }
 
         /**
@@ -573,7 +557,6 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          */
         public function tm_aj_get_bloginfo( $data_args ) {
             try {
-                header( 'Content-Type: application/json' );
                 $vars = array(
                     "name"            =>  get_bloginfo( "name" ),
                     "description"     =>  get_bloginfo( "description" ),
@@ -613,12 +596,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 
                     $vars["debug"]["plugins"] = $this->get_installed_plugins();
                 }
-                echo json_encode( $this->array_decode_entities( $vars ) );
+                $this->respond_json_and_die( $this->array_decode_entities( $vars ) );
             } catch ( Exception $e ) {
-                header( 'Content-Type: text/plain' );
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
@@ -628,27 +609,24 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             try {
                 if ( isset( $_GET['post_id'] ) ) {
                     $id = $_GET['post_id'];
-                } else {
+                } else if (isset( $data_args['post_id'] ) ) {
                     $id = $data_args['post_id'];
+                } else {
+                    throw new Exception( 'Invalid API call. Missing argument(s).' );
                 }
 
                 $this->sanitize_param( $id );
 
-                header( 'Content-Type: application/json' );
-                echo json_encode( $this->get_full_post( $id ) );
+                $this->respond_json_and_die( $this->get_full_post( $id ) );
             } catch ( Exception $e ) {
-                header( 'Content-Type: text/plain' );
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
          * Ajax: Set token
          */
         public function tm_aj_set_token( $data_args ) {
-            header( 'Content-Type: text/plain' );
-
             try {
                 $params = array();
 
@@ -667,23 +645,22 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 $this->sanitize_array( $params );
 
                 // Set options
+                $response = '';
                 if ( isset( $params['token'] ) && isset( $params['id'] ) ) {
                     update_option( 'tm_coschedule_token', $params['token'] );
                     update_option( 'tm_coschedule_id', $params['id'] );
-                    echo $params['token'];
+                    $response = $params['token'];
                 }
+                $this->respond_text_and_die( $response );
             } catch ( Exception $e ) {
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
          * Ajax: Check a token against the current token
          */
         public function tm_aj_check_token( $data_args ) {
-            header( 'Content-Type: text/plain' );
-
             try {
                 if ( isset( $_GET['token'] ) ) {
                     $token = $_GET['token'];
@@ -694,45 +671,43 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 $this->sanitize_param( $token );
 
                 // Compare
-                if ( true == $this->valid_token( $token ) ) {
-                    echo "Tokens match";
-                } else {
-                    echo "Tokens do not match";
-                }
+                $response = ( ( true == $this->valid_token( $token ) ) ? 'Tokens match' : 'Tokens do not match' );
+                $this->respond_text_and_die( $response );
             } catch ( Exception $e ) {
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
          * Ajax: Set custom post types
          */
         public function tm_aj_set_custom_post_types( $data_args ) {
-            header( 'Content-Type: text/plain' );
-
             try {
                 if ( isset( $_GET['post_types_list'] ) ) {
                     $list = $_GET['post_types_list'];
-                } else {
+                } else if ( isset( $data_args['post_types_list'] ) ) {
                     $list = $data_args['post_types_list'];
+                } else {
+                    throw new Exception( 'Invalid API call. Missing argument(s).' );
                 }
 
                 $this->sanitize_param( $list );
-                echo $list;
+
+                if ( !is_string( $list ) ) {
+                    throw new Exception( 'Invalid API call. Invalid argument(s).' );
+                }
+
                 update_option( 'tm_coschedule_custom_post_types_list', $list );
+                $this->respond_text_and_die( $list );
             } catch ( Exception $e ) {
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
          * Ajax: Get function
          */
         public function tm_aj_function() {
-            header( 'Content-Type: text/plain' );
-
             try {
                 // Save args
                 $args = $_GET;
@@ -781,27 +756,25 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 
                 if ( is_array( $out ) ) {
                     $out = array_values( $out );
-                    header( 'Content-Type: application/json' );
-                    echo json_encode( $out );
+                    $this->respond_json_and_die( $out );
                 } else {
                     // Check for errors
                     if ( is_wp_error( $out ) ) {
-                        echo $out->get_error_message();
-                    } else {
-                        echo $out;
+                        $out = $out->get_error_message();
                     }
+                    // ensure $out is not an object before responding //
+                    $out = ( is_object( $out ) ? json_encode( $out ) : $out );
+                    $this->respond_text_and_die( $out );
                 }
             } catch ( Exception $e ) {
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
          * AJAX: main entry point (when plugin_build > 38)
          */
         public function tm_aj_action() {
-            header( 'Content-Type: text/plain' );
             try {
                 // favor POST values for compatibility  //
                 if ( isset( $_POST['action'] ) ) { // plugin_build > 40 will prefer POST
@@ -921,29 +894,26 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 // Handle output
                 if ( is_array( $out ) ) {
                     $out = array_values( $out );
-                    header( 'Content-Type: application/json' );
-                    echo json_encode( $out );
+                    $this->respond_json_and_die( $out );
                 } else {
                     // Check for errors
                     if ( is_wp_error( $out ) ) {
-                        echo $out->get_error_message();
-                    } else {
-                        echo $out;
+                        $out = $out->get_error_message();
                     }
+                    // ensure $out is not an object before responding //
+                    $out = ( is_object( $out ) ? json_encode( $out ) : $out );
+                    $this->respond_text_and_die( $out );
                 }
 
             } catch ( Exception $e ) {
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
          * AJAX: Handles deactivation task
          */
         public function tm_aj_deactivation( $data_args ) {
-            header( 'Content-Type: text/plain' );
-
             try {
                 // Validate call
                 if ( isset( $_GET['token'] ) ) {
@@ -957,11 +927,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
 
                 delete_option( 'tm_coschedule_token' );
                 delete_option( 'tm_coschedule_id' );
+                $this->respond_empty_and_die();
             } catch ( Exception $e ) {
-                header( 'Content-Type: text/plain' );
-                echo 'Exception: ' . $e->getMessage();
+                $this->respond_exception_and_die( $e );
             }
-            die();
         }
 
         /**
@@ -1245,13 +1214,14 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         public function save_build_callback() {
             if ( true == $this->connected ) {
                 // Update a tracking option in wordpress
-                update_option( 'tm_coschedule_synced_build', $this->build );
+                if ( true == update_option( 'tm_coschedule_synced_build', $this->build ) ) {
 
-                // Post new info to api
-                $params = array();
-                $params['build'] = $this->build;
-                $params['version'] = $this->version;
-                $this->api_post( '/hook/wordpress_keys/build/save?_wordpress_key=' . $this->token, $params );
+                    // Post new info to api
+                    $params = array();
+                    $params['build'] = $this->build;
+                    $params['version'] = $this->version;
+                    $this->api_post( '/hook/wordpress_keys/build/save?_wordpress_key=' . $this->token, $params );
+                }
             }
         }
 
@@ -1325,8 +1295,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
-        * Edit Flow Fix: Runs before the edit flow function that modifies the post_date_gmt
-        */
+         * Edit Flow Fix: Runs before the edit flow function that modifies the post_date_gmt
+         */
         public function fix_custom_status_timestamp_before( $data ) {
             // Save post_date_gmt for later
             global $cos_cached_post_date_gmt;
@@ -1338,8 +1308,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
-        * Edit Flow Fix: Runs after the edit flow function that modifies the post_date_gmt
-        */
+         * Edit Flow Fix: Runs after the edit flow function that modifies the post_date_gmt
+         */
         public function fix_custom_status_timestamp_after( $data ) {
             global $cos_cached_post_date_gmt;
             if ( isset( $cos_cached_post_date_gmt ) && ! empty( $cos_cached_post_date_gmt ) ) {
@@ -1349,8 +1319,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
-        * Get's the current post's post_type.
-        */
+         * Get's the current post's post_type.
+         */
         public function get_current_post_type() {
             global $post, $typenow, $current_screen;
 
@@ -1456,6 +1426,44 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             }
 
             return $publish_missed_schedule_posts_response;
+        }
+
+        // response handling functions start here //
+
+        public function respond_empty_and_die() {
+            $this->respond_text_and_die();
+        }
+
+        public function respond_json_and_die( $data ) {
+            $this->respond_with_content_type_and_die( 'application/json', json_encode( $data ) );
+        }
+
+        public function respond_exception_and_die( $e ) {
+            $this->respond_with_content_type_and_die( 'text/plain', 'Exception: ' . $e->getMessage() );
+        }
+
+        public function respond_text_and_die( $data ) {
+            $this->respond_with_content_type_and_die( 'text/plain', $data );
+        }
+
+        public function respond_with_content_type_and_die( $content_type, $data ) {
+            try {
+                header( 'Pragma: no-cache' );
+                header( 'Cache-Control: no-cache' );
+                header( 'Expires: Thu, 01 Dec 1994 16:00:00 GMT' );
+                header( 'Connection: close' );
+                header( 'Content-Type: ' . $content_type );
+
+                // response body is optional //
+                if ( isset( $data ) ) {
+                    echo $data;
+                }
+            } catch (Exception $e) {
+                header( 'Content-Type: text/plain' );
+                echo 'Exception in respond_with_content_type_and_die(...): ' . $e->getMessage();
+            }
+
+            die();
         }
 
     } // End TM_CoSchedule class
