@@ -85,7 +85,10 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             if ( get_option( 'tm_coschedule_activation_redirect', false ) ) {
                 // Redirect to settings page
                 if ( delete_option( 'tm_coschedule_activation_redirect' ) ) {
+                    // NOTE: call to exit after wp_redirect is per WP Codex doc:
+                    //       http://codex.wordpress.org/Function_Reference/wp_redirect#Usage
                     wp_redirect( 'admin.php?page=tm_coschedule_calendar' );
+                    exit;
                 }
             }
         }
@@ -150,9 +153,11 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             add_action( 'load-post.php', array( $this, "meta_box_action" ) );
             add_action( 'load-post-new.php', array( $this, "meta_box_action" ) );
 
-            // Ajax: Trigger cron
-            add_action( 'wp_ajax_tm_aj_trigger_cron', array( $this, 'tm_aj_trigger_cron' ) );
-            add_action( 'wp_ajax_nopriv_tm_aj_trigger_cron', array( $this, 'tm_aj_trigger_cron' ) );
+            if ( $this->is_wp_vip !== true ) {
+                // Ajax: Trigger cron - only available in non-WP-VIP environments
+                add_action( 'wp_ajax_tm_aj_trigger_cron', array( $this, 'tm_aj_trigger_cron' ) );
+                add_action( 'wp_ajax_nopriv_tm_aj_trigger_cron', array( $this, 'tm_aj_trigger_cron' ) );
+            }
 
             // Ajax: Get blog info
             add_action( 'wp_ajax_tm_aj_get_bloginfo', array( $this, 'tm_aj_get_bloginfo' ) );
@@ -457,11 +462,16 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          * Inserts the meta box
          */
         public function meta_box_insert( $post ) {
-            $url = $this->app_metabox;
-            $url .= "/#/authenticate?blogID=" . urlencode( get_option( 'tm_coschedule_id' ) );
-            $url .= "&postID=" . urlencode( $post->ID );
-            $url .= "&build=" . urlencode( $this->build );
-            $url .= "&userID=" . urlencode( $this->current_user_id );
+            $blog_id = get_option( 'tm_coschedule_id' );
+            $query_params = array(
+                "blogID" => urlencode( $blog_id ),
+                "postID" => urlencode( $post->ID ),
+                "build"  => urlencode( $this->build ),
+                "userID" => urlencode( $this->current_user_id )
+            );
+            $url = untrailingslashit( $this->app_metabox ) . "/#/authenticate";
+            // NOTE: calling add_query_arg(...) with empty string to avoid it relocating the hash location of above $url
+            $url .= add_query_arg( $query_params, '' );
         ?>
             <iframe id="CoSmetabox" frameborder="0" border="0" scrolling="no" src="<?php echo esc_url( $url ); ?>" width="100%"></iframe>
         <?php
@@ -850,6 +860,12 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                     'tm_aj_trigger_cron'
                 );
 
+                // do not allow some functions when in WP-VIP environments
+                if ( $this->is_wp_vip === true ) {
+                    unset( $defer_token_check[ array_search( 'tm_aj_trigger_cron', $defer_token_check ) ] );
+                    unset( $private_functions[ array_search( 'tm_aj_trigger_cron', $private_functions ) ] );
+                }
+
                 // Allowed functions
                 $allowed = array_merge( $wp_functions, $private_functions );
 
@@ -1023,9 +1039,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $site_url = get_site_url();
 
             // remove trailing slash from site url
-            if( substr( $site_url, -1 ) == '/' ) {
-                $site_url = substr( $site_url, 0, -1 );
-            }
+            // Codex Reference: http://codex.wordpress.org/Function_Reference/untrailingslashit
+            $site_url = untrailingslashit( $site_url );
 
             // Only include valid URL
             if ( is_string( $post_thumbnail_url ) && strlen( $post_thumbnail_url ) > 0 ) {
@@ -1048,9 +1063,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $site_url = get_site_url();
 
             // remove trailing slash from site url
-            if( substr( $site_url, -1 ) == '/' ) {
-                $site_url = substr( $site_url, 0, -1 );
-            }
+            // Codex Reference: http://codex.wordpress.org/Function_Reference/untrailingslashit
+            $site_url = untrailingslashit( $site_url );
 
             preg_match_all( '/<img[^>]+>/i', $content, $images );
 
