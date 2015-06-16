@@ -658,7 +658,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 }
 
                 // validate required $post attributes //
-                $post_attributes = ['post_content', 'post_title'];
+                $post_attributes = array( 'post_content', 'post_title' );
                 foreach ( $post_attributes as $required_attribute ) {
                     if ( ! isset( $post[$required_attribute] ) || empty( $post[$required_attribute] ) ) {
                         throw new Exception( 'Invalid API call. Missing required post attribute(s).' );
