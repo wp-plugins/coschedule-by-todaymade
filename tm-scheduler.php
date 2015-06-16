@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.3.4
+Version: 2.4.0
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -24,8 +24,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app = "https://app.coschedule.com";
         private $app_metabox = "https://app.coschedule.com/metabox";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.3.4";
-        private $build = 52;
+        private $version = "2.4.0";
+        private $build = 53;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -566,6 +566,142 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
+         * Adapted from nice example found here: http://theme.fm/2011/10/how-to-upload-media-via-url-programmatically-in-wordpress-2657/
+         */
+        public function tm_aj_sideload_url( $data_args ) {
+            try {
+
+                if ( isset( $data_args['url'] ) ) {
+                    $url = $data_args['url'];
+                }
+                if ( isset( $data_args['post_id'] ) ) {
+                    $post_id = $data_args['post_id'];
+                }
+
+                // make $url safe //
+                $this->sanitize_param( $url );
+                $url = esc_url( $url );
+
+                // make $post_id safe //
+                $this->sanitize_param( $post_id );
+                if ( ! is_numeric( $post_id ) ) {
+                    $post_id = 0;
+                }
+
+                // validate required param //
+                if ( ! isset( $url ) || empty( $url ) ) {
+                    throw new Exception( 'Invalid API call. Missing argument(s).' );
+                }
+
+                // download it to temporary spot //
+                $attachment_pointer = download_url( $url );
+                $file_array = array(
+                    'name' => basename( $url ),
+                    'tmp_name' => $attachment_pointer
+                );
+
+                // track where in process //
+                $stage = 'download';
+
+                // check for download errors //
+                if ( ! is_wp_error( $attachment_pointer ) ) {
+
+                    // handle media, $post_id === 0 will not associate media with a post //
+                    $attachment_pointer = media_handle_sideload( $file_array, $post_id );
+
+                    // track where in process //
+                    $stage = 'sideload';
+
+                    // check for sideload error //
+                    if ( ! is_wp_error( $attachment_pointer ) ) {
+
+                        // extract url of attachment //
+                        $response = array();
+                        $response['url'] = $url;
+                        $response['attachment_url'] = wp_get_attachment_url( $attachment_pointer );
+
+                        // respond OK //
+                        return $this->respond_json_and_die( $response );
+                    }
+                }
+
+                // something went wrong, remove temporary file //
+                @unlink( $file_array['tmp_name'] );
+
+                // report error //
+                if ( is_wp_error( $attachment_pointer ) ) {
+                    throw new Exception( 'Sideload failed during ' . $stage . ' with WP Error: ' . $attachment_pointer->get_error_message() ) ;
+                } else {
+                    throw new Exception( 'Sideload failed during ' . $stage . ' for unknown reason.' ) ;
+                }
+
+            } catch ( Exception $e ) {
+                $this->respond_exception_and_die( $e );
+            }
+        }
+
+        /**
+         * Insert a new WordPress Post given a WP Post-like structure @ $data_args['post'], upon success returns JSON
+         * form of get_full_post(...)
+         */
+        public function tm_aj_import_post( $data_args ) {
+            try {
+
+                // validate expected arg //
+                if ( isset( $data_args['post'] ) ) {
+                    $post = $data_args['post'];
+                }
+
+                // NOTE: all significant sanitization of $post content is left to wp_insert_post(...) //
+                if ( ! isset( $post ) || empty( $post ) ) {
+                    throw new Exception( 'Invalid API call. Missing argument(s).' );
+                }
+
+                // validate required $post attributes //
+                $post_attributes = ['post_content', 'post_title'];
+                foreach ( $post_attributes as $required_attribute ) {
+                    if ( ! isset( $post[$required_attribute] ) || empty( $post[$required_attribute] ) ) {
+                        throw new Exception( 'Invalid API call. Missing required post attribute(s).' );
+                    }
+                }
+
+                // sanitize title per https://codex.wordpress.org/Function_Reference/wp_insert_post#Security //
+                $post['post_title'] = wp_strip_all_tags( $post['post_title'] );
+
+                // guarded default values //
+                $post['post_status'] = $this->get_value_or_default( $post['post_status'], 'draft' );
+                $post['post_type'] = $this->get_value_or_default( $post['post_type'], 'post' );
+
+                // add filter to prevent CoSchedule's own API callback upon post creation //
+                add_filter( 'tm_coschedule_save_post_callback_filter', array( $this, 'prevent_save_post_callback' ), 1, 2 );
+                $post_id = wp_insert_post( $post, true );
+
+                // respond //
+                if ( ! is_wp_error( $post_id ) ) {
+                    $this->respond_json_and_die( $this->get_full_post( $post_id ) );
+                } else {
+                    throw new Exception( 'Unable to insert post: ' . $post_id->get_error_message() );
+                }
+            } catch( Exception $e ) {
+                $this->respond_exception_and_die( $e );
+            }
+        }
+
+        /**
+         * Filter target that, when registered, will prevent CoSchedule's own registered save_post callback from executing.
+         */
+        public function prevent_save_post_callback( $state, $post_id ) {
+            return false;
+        }
+
+        /**
+         * Utility that will return given value, given default or null.
+         */
+        public function get_value_or_default(&$var, $default=null) {
+            return isset($var) ? $var : $default;
+        }
+
+        /**
          * Ajax: Return blog info
          */
         public function tm_aj_get_bloginfo( $data_args ) {
@@ -860,7 +996,9 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                     'tm_aj_check_token',
                     'tm_aj_set_custom_post_types',
                     'tm_aj_deactivation',
-                    'tm_aj_trigger_cron'
+                    'tm_aj_trigger_cron',
+                    'tm_aj_sideload_url',
+                    'tm_aj_import_post',
                 );
 
                 // do not allow some functions when in WP-VIP environments
