@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.4.0
+Version: 2.4.2
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -24,8 +24,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app = "https://app.coschedule.com";
         private $app_metabox = "https://app.coschedule.com/metabox";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.4.0";
-        private $build = 53;
+        private $version = "2.4.2";
+        private $build = 55;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
@@ -378,40 +378,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          */
         public function meta_box_enabled() {
             $post_type = $this->get_current_post_type();
-            $custom_post_types_list = get_option( 'tm_coschedule_custom_post_types_list' );
-
-            // Grab remote list if not set
-            if ( empty( $custom_post_types_list ) && true == $this->connected ) {
-                // Load remote blog information
-                $resp = $this->api_get( '/wordpress_keys?_wordpress_key=' . $this->token );
-
-                // be extra careful with resp as we don't want an exception to escape this function //
-                if ( ! is_wp_error($resp) && isset( $resp['response'] ) && isset( $resp['response']['code'] ) && 200 === $resp['response']['code'] ) {
-                    $json = json_decode( $resp['body'], true );
-
-                    // Check for a good response
-                    if ( isset( $json['result'] ) && isset( $json['result'][0] ) && ! empty( $json['result'][0]['custom_post_types'] ) ) {
-                        $custom_post_types_list = $json['result'][0]['custom_post_types_list'];
-
-                        // Save custom list
-                        if ( ! empty( $custom_post_types_list ) ) {
-                            update_option( 'tm_coschedule_custom_post_types_list', $custom_post_types_list );
-                        }
-                    }
-                }
-            }
-
-            // Default
-            if ( empty( $custom_post_types_list ) ) {
-                $custom_post_types_list = 'post';
-                update_option( 'tm_coschedule_custom_post_types_list', $custom_post_types_list );
-            }
-
-            // Convert to an array
-            $custom_post_types_list_array = explode( ',', $custom_post_types_list );
-
-            // Check if post type is supported
-            return in_array( $post_type, $custom_post_types_list_array );
+            return $this->is_synchronizable_post_type( $post_type, true );
         }
 
         /**
@@ -1247,6 +1214,48 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         }
 
         /**
+         * Utility function to validate if given $post_type is in option 'tm_coschedule_custom_post_types_list' or
+         * default of 'post'
+         */
+        public function is_synchronizable_post_type( $post_type, $sync_with_api ) {
+            $sync_with_api = ( $sync_with_api === true ? true : false ) ;
+            $custom_post_types_list = get_option( 'tm_coschedule_custom_post_types_list' );
+
+            // Grab remote list if not set
+            if ( $sync_with_api && empty( $custom_post_types_list ) && true == $this->connected ) {
+                // Load remote blog information
+                $resp = $this->api_get( '/wordpress_keys?_wordpress_key=' . $this->token );
+
+                // be extra careful with resp as we don't want an exception to escape this function //
+                if ( ! is_wp_error($resp) && isset( $resp['response'] ) && isset( $resp['response']['code'] ) && 200 === $resp['response']['code'] ) {
+                    $json = json_decode( $resp['body'], true );
+
+                    // Check for a good response
+                    if ( isset( $json['result'] ) && isset( $json['result'][0] ) && ! empty( $json['result'][0]['custom_post_types'] ) ) {
+                        $custom_post_types_list = $json['result'][0]['custom_post_types_list'];
+
+                        // Save custom list
+                        if ( ! empty( $custom_post_types_list ) ) {
+                            update_option( 'tm_coschedule_custom_post_types_list', $custom_post_types_list );
+                        }
+                    }
+                }
+            }
+
+            // Default
+            if ( empty( $custom_post_types_list ) ) {
+                $custom_post_types_list = 'post';
+                update_option( 'tm_coschedule_custom_post_types_list', $custom_post_types_list );
+            }
+
+            // Convert to an array
+            $custom_post_types_list_array = explode( ',', $custom_post_types_list );
+
+            // Check if post type is supported
+            return in_array( $post_type, $custom_post_types_list_array );
+        }
+
+        /**
          * Get currated array of all plugins installed in this blog
          */
         public function get_installed_plugins() {
@@ -1298,9 +1307,13 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             if ( true == $this->connected && ! wp_is_post_revision( $post_id ) && $filter_result ) {
                 // Load post
                 $post = $this->get_full_post( $post_id );
+                $post_type = $this->get_value_or_default( $post['post_type'], 'post' );
 
-                // Send to API
-                $this->api_post( '/hook/wordpress_posts/save?_wordpress_key=' . $this->token, $post );
+                // poke API only for certain post_type //
+                if ( $this->is_synchronizable_post_type( $post_type, false ) ) {
+                    // Send to API
+                    $this->api_post( '/hook/wordpress_posts/save?_wordpress_key=' . $this->token, $post );
+                }
             }
         }
 
@@ -1314,8 +1327,16 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $filter_result = apply_filters( 'tm_coschedule_delete_post_callback_filter', true , $post_id );
             // Verify post is not a revision
             if ( true == $this->connected && ! wp_is_post_revision( $post_id ) && $filter_result ){
-                // Send to API
-                $this->api_post( '/hook/wordpress_posts/delete?_wordpress_key=' . $this->token, array( 'post_id' => $post_id ) );
+
+                // Load post (NOTE: bypass $this->get_full_post(...) because we do not need added info) //
+                $post = get_post( $post_id, "ARRAY_A" );
+                $post_type = $this->get_value_or_default( $post['post_type'], 'post' );
+
+                // poke API only for certain post_type //
+                if ( $this->is_synchronizable_post_type( $post_type, false ) ) {
+                    // Send to API
+                    $this->api_post( '/hook/wordpress_posts/delete?_wordpress_key=' . $this->token, array( 'post_id' => $post_id ) );
+                }
             }
         }
 
@@ -1344,12 +1365,15 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         public function save_user_callback( $user_id ) {
             if ( true == $this->connected ) {
                 $user = get_userdata( $user_id );
-                $can_edit = $user->has_cap( 'edit_posts' );
-                if ( true == $can_edit ) {
+
+                if ( ! is_object( $user ) ) {
+                    return false; // invalid user
+                }
+
+                if ( $user->has_cap( 'edit_posts' ) ) {
                     $this->api_post( '/hook/wordpress_authors/save?_wordpress_key=' . $this->token, (array) $user->data );
                 } else {
-                    // Remove
-                    $this->delete_user_callback( $user_id );
+                    $this->delete_user_callback( $user_id ); // Remove
                 }
             }
         }
