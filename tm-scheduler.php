@@ -2,7 +2,7 @@
 /*
 Plugin Name: CoSchedule by Todaymade
 Description: Schedule social media messages alongside your blog posts in WordPress, and then view them on a Google Calendar interface. <a href="http://app.coschedule.com" target="_blank">Account Settings</a>
-Version: 2.4.2
+Version: 2.4.3
 Author: Todaymade
 Author URI: http://todaymade.com/
 Plugin URI: http://coschedule.com/
@@ -24,13 +24,14 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
         private $app = "https://app.coschedule.com";
         private $app_metabox = "https://app.coschedule.com/metabox";
         private $assets = "https://d2lbmhk9kvi6z5.cloudfront.net";
-        private $version = "2.4.2";
-        private $build = 55;
+        private $version = "2.4.3";
+        private $build = 56;
         private $connected = false;
         private $token = false;
         private $blog_id = false;
         private $current_user_id = false;
         private $is_wp_vip = false;
+        private $base64_decode_disabled;
 
         /**
          * Class constructor: initializes class variables and adds actions and filters.
@@ -48,6 +49,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             $this->blog_id = get_option( 'tm_coschedule_id' );
             $this->synced_build = get_option( 'tm_coschedule_synced_build' );
             $this->is_wp_vip = ( defined( 'WPCOM_IS_VIP_ENV' ) && WPCOM_IS_VIP_ENV === true );
+            $this->base64_decode_disabled = in_array('base64_decode', explode( ',', str_replace( ' ', '', ini_get( 'disable_functions' ) ) ) );
 
             // Check if connected to api
             if ( ! empty( $this->token ) && ! empty( $this->blog_id ) ) {
@@ -673,6 +675,8 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
          */
         public function tm_aj_get_bloginfo( $data_args ) {
             try {
+                $http_api_transports = apply_filters( 'http_api_transports', array( 'curl', 'streams' ), array(), $this->api );
+                $http = new WP_Http;
                 $vars = array(
                     "name"            =>  get_bloginfo( "name" ),
                     "description"     =>  get_bloginfo( "description" ),
@@ -686,7 +690,14 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                     "gmt_offset"      =>  get_option( "gmt_offset" ),
                     "plugin_version"  =>  $this->version,
                     "plugin_build"    =>  $this->build,
-                    "is_wp_vip"       =>  $this->is_wp_vip
+                    "is_wp_vip"       =>  $this->is_wp_vip,
+                    "charset"         =>  get_bloginfo('charset'),
+                    "first_transport" =>  $http->_get_first_available_transport( $this->api ),
+                    "all_transports"  =>  implode( ',', $http_api_transports ),
+                    "is_multisite"    =>  is_multisite(),
+                    "base64_decode_disabled" => $this->base64_decode_disabled,
+                    "php_disabled_fn"        => ini_get( 'disable_functions' ),
+                    "php_disabled_cl"        => ini_get( 'disable_classes' )
                 );
 
                 if ( isset( $_GET['tm_debug'] ) || isset( $data_args['tm_debug'] ) ) {
@@ -912,7 +923,7 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
                 }
 
                 // Decode 'data' and re-define $args
-                $args = json_decode( base64_decode( $args['data'] ), true );
+                $args = json_decode( $this->adapt_base64_decode( $args['data'] ), true );
 
                 // NOTE: After this point, $args elements should be individually sanitized before use!!!
 
@@ -1703,6 +1714,113 @@ if ( ! class_exists( 'tm_coschedule' ) ) {
             }
 
             die();
+        }
+
+        public function adapt_base64_decode( $encoded_value ) {
+            if ( !$this->base64_decode_disabled ) {
+                return base64_decode( $encoded_value );
+            } else {
+                return $this->cos_base64_decode( $encoded_value );
+            }
+        }
+
+        /*
+         * Based on example found here: http://stackoverflow.com/a/27025025
+         */
+        public function cos_base64_decode( $input ) {
+
+            if ( !isset( $input ) || !is_string( $input ) ) {
+                return $input;
+            }
+
+            $keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+            $chr1 = $chr2 = $chr3 = '';
+            $enc1 = $enc2 = $enc3 = $enc4 = '';
+            $i = 0;
+            $output = '';
+
+            // remove all characters that are not A-Z, a-z, 0-9, +, /, or = //
+            $input = preg_replace( '[^A-Za-z0-9\+\/\=]', '', $input );
+
+            do {
+                $enc1 = strpos( $keyStr, substr( $input, $i++, 1 ) );
+                $enc2 = strpos( $keyStr, substr( $input, $i++, 1 ) );
+                $enc3 = strpos( $keyStr, substr( $input, $i++, 1 ) );
+                $enc4 = strpos( $keyStr, substr( $input, $i++, 1 ) );
+
+                $chr1 = ( $enc1 << 2 ) | ( $enc2 >> 4 );
+                $chr2 = ( ( $enc2 & 15 ) << 4 ) | ( $enc3 >> 2 );
+                $chr3 = ( ( $enc3 & 3 ) << 6 ) | $enc4;
+
+                $output = $output . chr( (int) $chr1 );
+                if ( $enc3 != 64 ) {
+                    $output = $output . chr( (int) $chr2 );
+                }
+                if ( $enc4 != 64 ) {
+                    $output = $output . chr( (int) $chr3 );
+                }
+
+                $chr1 = $chr2 = $chr3 = '';
+                $enc1 = $enc2 = $enc3 = $enc4 = '';
+
+            } while ( $i < strlen( $input ) );
+
+            return urldecode( $output );
+        }
+
+        /*
+         * Based on example found here: http://stackoverflow.com/a/27025025
+         */
+        public function cos_base64_encode( $data ) {
+
+            if ( !isset( $data ) || !is_string( $data ) ) {
+                return $data;
+            }
+
+            $b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+            $o1 = $o2 = $o3 = $h1 = $h2 = $h3 = $h4 = $bits = $i = 0;
+            $ac = 0;
+            $enc = '';
+            $tmp_arr = array();
+
+            if ( !$data ) {
+                return data;
+            }
+
+            do {
+                // pack three octets into four hexets
+                $o1 = $this->charCodeAt( $data, $i++ );
+                $o2 = $this->charCodeAt( $data, $i++ );
+                $o3 = $this->charCodeAt( $data, $i++ );
+
+                $bits = $o1 << 16 | $o2 << 8 | $o3;
+
+                $h1 = $bits >> 18 & 0x3f;
+                $h2 = $bits >> 12 & 0x3f;
+                $h3 = $bits >> 6 & 0x3f;
+                $h4 = $bits & 0x3f;
+
+                // use hexets to index into b64, and append result to encoded string //
+                $tmp_arr[$ac++] =
+                    $this->charAt( $b64, $h1 )
+                    .$this->charAt( $b64, $h2 )
+                    .$this->charAt( $b64, $h3 )
+                    .$this->charAt( $b64, $h4 );
+
+            } while ( $i < strlen( $data ) );
+
+            $enc = implode( $tmp_arr, '' );
+            $r = ( strlen( $data ) % 3 );
+
+            return ( $r ? substr( $enc, 0, ( $r - 3 ) ) : $enc ) . substr( '===', ( $r || 3 ) );
+        }
+
+        public function charCodeAt( $data, $char ) {
+            return ord( substr( $data, $char, 1 ) );
+        }
+
+        public function charAt( $data, $char ) {
+            return substr( $data, $char, 1 );
         }
 
     } // End TM_CoSchedule class
